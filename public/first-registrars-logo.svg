@@ -1,0 +1,9 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" width="920" height="260" viewBox="0 0 920 260" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">FirstRegistrars &amp; Investor Services</title>
+  <desc id="logoDesc">Brand mark and text logo for FirstRegistrars and Investor Services</desc>
+  <rect width="920" height="260" fill="#ffffff"/>
+  <polygon points="115,20 290,20 170,95" fill="#b4952f"/>
+  <text x="65" y="158" font-size="84" font-family="Segoe UI, Arial, sans-serif" font-style="italic" font-weight="700" fill="#1f467b">FirstRegistrars</text>
+  <rect x="60" y="184" width="770" height="10" fill="#b4952f"/>
+  <text x="450" y="232" text-anchor="middle" font-size="42" font-family="Segoe UI, Arial, sans-serif" font-weight="700" fill="#1f467b">&amp; INVESTOR SERVICES</text>
+</svg>
