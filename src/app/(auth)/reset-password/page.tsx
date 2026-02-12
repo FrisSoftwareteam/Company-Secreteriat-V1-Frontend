@@ -1,6 +1,14 @@
 import { ResetPasswordForm } from "@/components/auth/ResetPasswordForm";
 
-export default function ResetPasswordPage() {
+type ResetPasswordPageProps = {
+  searchParams?: {
+    token?: string;
+  };
+};
+
+export default function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+  const token = searchParams?.token || "";
+
   return (
     <div className="auth-container">
       <div className="card auth-card">
@@ -11,9 +19,8 @@ export default function ResetPasswordPage() {
           </p>
         </div>
 
-        <ResetPasswordForm />
+        <ResetPasswordForm initialToken={token} />
       </div>
     </div>
   );
 }
-

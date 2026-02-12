@@ -1,14 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 
-export function ResetPasswordForm() {
+type ResetPasswordFormProps = {
+  initialToken?: string;
+};
+
+export function ResetPasswordForm({ initialToken = "" }: ResetPasswordFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialToken = useMemo(() => searchParams.get("token") || "", [searchParams]);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
@@ -83,4 +85,3 @@ export function ResetPasswordForm() {
     </form>
   );
 }
-
