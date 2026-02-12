@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/lib/api";
 import { AuthUser, useAuth } from "@/components/providers/AuthProvider";
@@ -54,6 +55,11 @@ export function LoginForm() {
       <div className="form-field">
         <label htmlFor="password">Password</label>
         <input id="password" name="password" type="password" required />
+      </div>
+      <div style={{ marginTop: "-8px", textAlign: "right" }}>
+        <Link href="/forgot-password" style={{ fontSize: "0.9rem", fontWeight: 600 }}>
+          Forgot password?
+        </Link>
       </div>
       {error ? <p className="notice">{error}</p> : null}
       <button className="button primary" type="submit" disabled={pending}>

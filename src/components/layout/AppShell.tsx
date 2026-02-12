@@ -8,7 +8,12 @@ import { Header } from "@/components/layout/Header";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 function isAuthRoute(pathname: string) {
-  return pathname === "/login" || pathname === "/signup";
+  return (
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password"
+  );
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
