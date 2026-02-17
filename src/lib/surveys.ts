@@ -13,6 +13,8 @@ export type SurveyQuestion = {
   type: QuestionType;
   required?: boolean;
   options?: string[];
+  subheading?: string;
+  displayNumber?: number;
 };
 
 export type SurveySection = {
@@ -38,6 +40,31 @@ export const agreeOptions = [
 
 export const ratingOptions = ["1", "2", "3", "4", "5"];
 
+function likertQuestion(
+  key: string,
+  label: string,
+  displayNumber: number,
+  subheading?: string
+): SurveyQuestion {
+  return {
+    key,
+    label,
+    type: "likert_agree",
+    required: true,
+    options: agreeOptions,
+    displayNumber,
+    subheading,
+  };
+}
+
+function textQuestion(key: string, label: string): SurveyQuestion {
+  return {
+    key,
+    label,
+    type: "long_text",
+  };
+}
+
 export const surveys: SurveyDefinition[] = [
   {
     slug: "board-evaluation",
@@ -48,436 +75,262 @@ export const surveys: SurveyDefinition[] = [
       {
         title: "Section A: Governance Framework",
         questions: [
-          {
-            key: "board_composition_diverse_mix",
-            label:
-              "Does the board possess a diverse mix of skills and experiences (i.e. the necessary expertise and diversity to effectively oversee the organisation)?",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_composition_additional_skills",
-            label: "If not, what additional skills or experiences are needed?",
-            type: "long_text",
-          },
-          {
-            key: "board_diversity_reflect",
-            label:
-              "Do you agree that the board reflect a diversity of gender, ethnicity, perspectives, experiences and backgrounds?",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_diversity_importance",
-            label: "Diversity is important to the board’s strategic goals.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_composition_aligns",
-            label:
-              "Does the current composition aligns with the skills and expertise needed for effective governance?",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_guidelines_appointment",
-            label:
-              "There are clear guidelines for the appointment and removal of board members.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_size_appropriate",
-            label:
-              "The current size of the board is appropriate in relation to the complexity of the organization.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_size_effective",
-            label:
-              "The board's size allows for effective decision-making and diverse viewpoints.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_understands_roles",
-            label: "The board understands its roles and responsibilities.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_induction_training",
-            label:
-              "Board members undergo induction and are provided with ongoing training and development opportunities.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "chairperson_facilitates",
-            label:
-              "The chairperson effectively facilitates board meetings and discussions.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "chairperson_participation",
-            label:
-              "The chairperson encourages active participation from all board members.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_effective_governance",
-            label:
-              "The board is effective in fulfilling its governance responsibilities.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "committees_charters",
-            label:
-              "Board Committees have their respective Committee Charters, which provide guidance on their structure, functions, authority and duties in line with Principle 11.1.3 of the NCCG.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "committees_understanding",
-            label:
-              "Board members adequately understand the roles and responsibilities of each committee.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "committees_effective",
-            label: "Board committees function effectively.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "committees_report_back",
-            label: "Committees frequently report back to the full board.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "committees_integrate",
-            label:
-              "Board committees effectively integrate with the overall board structure and decision-making processes.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "independent_directors_number",
-            label: "The board has an adequate number of independent directors.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "independent_directors_contribute",
-            label:
-              "Independent directors contribute to board effectiveness to a large extent.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
+          likertQuestion(
+            "board_composition_diverse_mix",
+            "Does the board possess a diverse mix of skills and experiences (i.e. the necessary expertise and diversity to effectively oversee the organisation)?",
+            1,
+            "Board Composition"
+          ),
+          likertQuestion(
+            "board_diversity_reflect",
+            "Do you agree that the board reflect a diversity of gender, ethnicity, perspectives, experiences and backgrounds?",
+            2,
+            "Board Diversity"
+          ),
+          likertQuestion("board_diversity_importance", "Diversity is important to the board’s strategic goals.", 3),
+          likertQuestion(
+            "board_composition_aligns",
+            "Does the current composition aligns with the skills and expertise needed for effective governance?",
+            4
+          ),
+          likertQuestion(
+            "board_guidelines_appointment",
+            "There are clear guidelines for the appointment and removal of board members.",
+            5
+          ),
+          likertQuestion(
+            "board_size_appropriate",
+            "The current size of the board is appropriate in relation to the complexity of the organization.",
+            6,
+            "Board Structure"
+          ),
+          likertQuestion("board_size_effective", "The board's size allows for effective decision-making and diverse viewpoints.", 7),
+          likertQuestion(
+            "board_understands_roles",
+            "The board understands its roles and responsibilities.",
+            8,
+            "Competence (Understanding of Roles and Responsibilities)"
+          ),
+          likertQuestion(
+            "board_induction_training",
+            "Board members undergo induction and are provided with ongoing training and development opportunities.",
+            9,
+            "Induction & Training"
+          ),
+          likertQuestion(
+            "chairperson_facilitates",
+            "The chairperson effectively facilitates board meetings and discussions.",
+            10,
+            "Role of Chairperson"
+          ),
+          likertQuestion(
+            "chairperson_participation",
+            "The chairperson encourages active participation from all board members.",
+            11
+          ),
+          likertQuestion(
+            "board_effective_governance",
+            "The board is effective in fulfilling its governance responsibilities.",
+            12,
+            "Overall Effectiveness"
+          ),
+          likertQuestion(
+            "committees_charters",
+            "Board Committees have their respective Committee Charters, which provide guidance on their structure, functions, authority and duties in line with Principle 11.1.3 of the NCCG.",
+            13,
+            "Board Committees"
+          ),
+          likertQuestion(
+            "committees_understanding",
+            "Board members adequately understand the roles and responsibilities of each committee.",
+            14
+          ),
+          likertQuestion("committees_effective", "Board committees function effectively.", 15),
+          likertQuestion("committees_report_back", "Committees frequently report back to the full board.", 16),
+          likertQuestion(
+            "committees_integrate",
+            "Board committees effectively integrate with the overall board structure and decision-making processes.",
+            17,
+            "Integration of Committees"
+          ),
+          likertQuestion(
+            "independent_directors_number",
+            "The board has an adequate number of independent directors.",
+            18,
+            "Independence"
+          ),
+          likertQuestion(
+            "independent_directors_contribute",
+            "Independent directors contribute to board effectiveness to a large extent.",
+            19
+          ),
         ],
       },
       {
         title: "Section B: Board Processes",
         questions: [
-          {
-            key: "meetings_frequency",
-            label: "Meetings are held regularly and at appropriate intervals.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "meeting_materials",
-            label:
-              "Board members receive meeting materials in advance to prepare adequately.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "agenda_clarity",
-            label: "Meeting agendas are clear, relevant, and strategically focused.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "attendance_rate",
-            label: "The attendance rate of board members at meetings is always good.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "meeting_effectiveness",
-            label: "Board meetings are scheduled timely and conducted efficiently.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "company_secretary_experience",
-            label:
-              "The Company Secretary also possesses requisite experience and qualifications to effectively carry out assigned duties, in line with Principle 8.1 of the NCCG.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "company_secretary_senior_staff",
-            label:
-              "The Company Secretary is a Senior Management staff of the Company as required by Principle 8.2 of the NCCG.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "company_secretary_assists",
-            label:
-              "In line with Principle 8.6.3 of the NCCG, the Company Secretary assists the Chairman and the MD/CEO in coordinating the activities of the Board.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "information_flow",
-            label: "Relevant information is provided to the board in a timely manner.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "decision_making",
-            label:
-              "Decisions are made clearly and communicated to relevant stakeholders timely and appropriately.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "consensus_building",
-            label:
-              "There is a process for fostering participation and consensus in decision making.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "consensus_suggestion",
-            label:
-              "If not, suggest a possible process for fostering participation and consensus in the board’s decision making?",
-            type: "long_text",
-          },
-          {
-            key: "conflict_resolution_process",
-            label: "There a clear process for addressing conflicts of interest.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "conflict_resolution_suggestion",
-            label:
-              "If not, suggest a possible process for addressing conflicts of interests.",
-            type: "long_text",
-          },
-          {
-            key: "conflict_handling",
-            label: "The board handles conflicts or disagreements, if any, effectively.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "board_self_assessment",
-            label:
-              "The board frequently reviews its own performance and effectiveness.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "director_contribution",
-            label:
-              "Each director contributes effectively to board discussions and decision-making.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "directors_engaged",
-            label: "Directors are engaged and active participants in meetings.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "transparency",
-            label: "Board activities and decisions are transparent to stakeholders.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "whistleblowing",
-            label:
-              "There is a structured process for whistleblowing/providing feedback to board members.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
+          likertQuestion("meetings_frequency", "Meetings are held regularly and at appropriate intervals.", 20, "Frequency"),
+          likertQuestion(
+            "meeting_materials",
+            "Board members receive meeting materials in advance to prepare adequately.",
+            21,
+            "Preparation"
+          ),
+          likertQuestion("agenda_clarity", "Meeting agendas are clear, relevant, and strategically focused.", 22, "Agenda Setting"),
+          likertQuestion("attendance_rate", "The attendance rate of board members at meetings is always good.", 23, "Attendance"),
+          likertQuestion("meeting_effectiveness", "Board meetings are scheduled timely and conducted efficiently.", 24, "Meeting Effectiveness"),
+          likertQuestion(
+            "company_secretary_experience",
+            "The Company Secretary also possesses requisite experience and qualifications to effectively carry out assigned duties, in line with Principle 8.1 of the NCCG.",
+            25,
+            "Company Secretariat"
+          ),
+          likertQuestion(
+            "company_secretary_senior_staff",
+            "The Company Secretary is a Senior Management staff of the Company as required by Principle 8.2 of the NCCG.",
+            26
+          ),
+          likertQuestion(
+            "company_secretary_assists",
+            "In line with Principle 8.6.3 of the NCCG, the Company Secretary assists the Chairman and the MD/CEO in coordinating the activities of the Board.",
+            27
+          ),
+          likertQuestion("information_flow", "Relevant information is provided to the board in a timely manner.", 28, "Information Flow"),
+          likertQuestion(
+            "decision_making",
+            "Decisions are made clearly and communicated to relevant stakeholders timely and appropriately.",
+            29,
+            "Decision-Making Process"
+          ),
+          likertQuestion(
+            "consensus_building",
+            "There is a process for fostering participation and consensus in decision making.",
+            30,
+            "Consensus Building"
+          ),
+          likertQuestion(
+            "conflict_resolution_process",
+            "There a clear process for addressing conflicts of interest.",
+            31,
+            "Conflict Resolution"
+          ),
+          textQuestion(
+            "conflict_resolution_suggestion",
+            "If not, suggest a possible process for addressing conflicts of interests."
+          ),
+          likertQuestion("conflict_handling", "The board handles conflicts or disagreements, if any, effectively.", 32),
         ],
       },
       {
-        title: "Section D: Stakeholder Engagement",
+        title: "Section C: Performance Review",
         questions: [
-          {
-            key: "stakeholder_interests",
-            label: "The board considers stakeholders’ interests in decision-making.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "stakeholder_engagement",
-            label:
-              "The board engages well with shareholders and other stakeholders to gather insights and feedback.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "management_collaboration",
-            label:
-              "The board communicates and collaborates well and effectively with executive management.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
+          likertQuestion(
+            "board_self_assessment",
+            "The board frequently reviews its own performance and effectiveness.",
+            33,
+            "Self-Assessment"
+          ),
+          likertQuestion(
+            "director_contribution",
+            "Each director contributes effectively to board discussions and decision-making.",
+            34,
+            "Individual Directors Assessment"
+          ),
+          likertQuestion("directors_engaged", "Directors are engaged and active participants in meetings.", 35),
         ],
       },
       {
-        title: "Section C: Strategic Oversight",
+        title: "Section D: Communication and Reporting",
         questions: [
-          {
-            key: "vision_strategy",
-            label: "The board sets a clear and compelling vision for the organization.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "strategic_oversight",
-            label:
-              "The board effectively manages and oversees the organisation’s strategic direction.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "goal_setting",
-            label:
-              "There are clear goals and objectives set for the board and its committees.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "succession_plan",
-            label: "The board has a formal succession plan for key positions.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "succession_plan_review",
-            label: "The board reviews and updates this succession plan regularly.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "resource_allocation",
-            label:
-              "The board reviews and approves resource allocation to support its strategic goals.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "compliance_legal",
-            label:
-              "The board effectively and routinely ensures compliance with regulatory and legal requirements.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "risk_management",
-            label:
-              "The board effectively oversees the company’s risk management processes and policies.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "governance_framework",
-            label:
-              "The governance framework are well aligned with best practices and regulatory requirements.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
-          {
-            key: "regulatory_knowledge",
-            label:
-              "The board is knowledgeable about relevant laws and regulations affecting the organisation.",
-            type: "likert_agree",
-            required: true,
-            options: agreeOptions,
-          },
+          likertQuestion("transparency", "Board activities and decisions are transparent to stakeholders.", 36, "Transparency"),
+          likertQuestion(
+            "whistleblowing",
+            "There is a structured process for whistleblowing/providing feedback to board members.",
+            37,
+            "Feedback/Whistleblowing Mechanism"
+          ),
         ],
       },
       {
-        title: "Section E: Recommendations",
+        title: "Section E: Stakeholder Engagement",
         questions: [
-          {
-            key: "improvement_areas",
-            label:
-              "What areas of the company’s board governance could be improved?",
-            type: "long_text",
-          },
-          {
-            key: "additional_comments",
-            label: "Any other comments or suggestions?",
-            type: "long_text",
-          },
+          likertQuestion(
+            "stakeholder_interests",
+            "The board considers stakeholders’ interests in decision-making.",
+            38,
+            "Stakeholder Interests"
+          ),
+          likertQuestion(
+            "stakeholder_engagement",
+            "The board engages well with shareholders and other stakeholders to gather insights and feedback.",
+            39
+          ),
+          likertQuestion(
+            "management_collaboration",
+            "The board communicates and collaborates well and effectively with executive management.",
+            40
+          ),
+        ],
+      },
+      {
+        title: "Section F: Strategic Oversight",
+        questions: [
+          likertQuestion("vision_strategy", "The board sets a clear and compelling vision for the organization.", 41, "Vision and Strategy"),
+          likertQuestion(
+            "strategic_oversight",
+            "The board effectively manages and oversees the organisation’s strategic direction.",
+            42,
+            "Strategic Oversight"
+          ),
+          likertQuestion(
+            "goal_setting",
+            "There are clear goals and objectives set for the board and its committees.",
+            43,
+            "Goal Setting"
+          ),
+          likertQuestion("succession_plan", "The board has a formal succession plan for key positions.", 44, "Succession Planning"),
+          likertQuestion("succession_plan_review", "The board reviews and updates this succession plan regularly.", 45),
+          likertQuestion(
+            "resource_allocation",
+            "The board reviews and approves resource allocation to support its strategic goals.",
+            46,
+            "Resource Allocation"
+          ),
+        ],
+      },
+      {
+        title: "Section G: Compliance & Risk Management",
+        questions: [
+          likertQuestion(
+            "compliance_legal",
+            "The board effectively and routinely ensures compliance with regulatory and legal requirements.",
+            47,
+            "Compliance and Risk Management"
+          ),
+          likertQuestion(
+            "risk_management",
+            "The board effectively oversees the company’s risk management processes and policies.",
+            48,
+            "Regulatory Compliance"
+          ),
+          likertQuestion(
+            "governance_framework",
+            "The governance framework are well aligned with best practices and regulatory requirements.",
+            49,
+            "Governance Framework"
+          ),
+          likertQuestion(
+            "regulatory_knowledge",
+            "The board is knowledgeable about relevant laws and regulations affecting the organisation.",
+            50
+          ),
+        ],
+      },
+      {
+        title: "Section H: Recommendations",
+        questions: [
+          { ...textQuestion("improvement_areas", "What areas of the company’s board governance could be improved?"), subheading: "Improvement Areas" },
+          { ...textQuestion("additional_comments", "Any other comments or suggestions?"), subheading: "Additional Comments" },
         ],
       },
     ],
@@ -489,7 +342,7 @@ export const surveys: SurveyDefinition[] = [
       "Assess individual director effectiveness against corporate governance standards.",
     sections: [
       {
-        title: "Respondent Context",
+        title: "Section A - Respondent Context",
         questions: [
           {
             key: "evaluation_date",
@@ -502,17 +355,18 @@ export const surveys: SurveyDefinition[] = [
             label: "Director Being Evaluated",
             type: "single_select",
             required: true,
+            displayNumber: 1,
             options: [
-              "Samuel Durojaye (Chairman)",
-              "Oluyemisi Dawodu",
-              "Abiodun Fari-Arole",
-              "Adewale Jubril",
-              "Remilekun Bakare",
-              "Mufutau Towolawi",
-              "Akinwale Ojo",
-              "Olusgun Osibote",
-              "Ronke Akinleye",
-              "Rotimi Olashore",
+              "Mr. Samuel Durojaye (Chairman)",
+              "Mrs. Oluyemisi Dawodu",
+              "Dr. Remilekun Bakare",
+              "Mr. Adesina Towolawi",
+              "Mr. Otunba Adewale Jubril",
+              "Esv. Akinwale Ojo",
+              "Arc. Abiodun Fari-Arole",
+              "Mrs. Ronke Akinleye",
+              "Mr. Rotimi Olashore",
+              "Mr. Olawale Osisanya",
             ],
           },
           {
@@ -524,13 +378,14 @@ export const surveys: SurveyDefinition[] = [
             key: "years_interacting",
             label: "Years interacting with this Director",
             type: "single_select",
+            displayNumber: 2,
             options: ["<1", "1–3", "3–5", ">5"],
           },
         ],
       },
       {
-        title: "Section B — Board Effectiveness & Responsibilities",
-        description: "Reflects board duties, including oversight, strategy and governance.",
+        title: "SECTION B — BOARD EFFECTIVENESS & RESPONSIBILITIES",
+        description: "(Reflects board duties, including oversight, strategy and governance)",
         questions: [
           {
             key: "b1_prepared",
@@ -564,372 +419,375 @@ export const surveys: SurveyDefinition[] = [
           {
             key: "b5_regulatory_knowledge",
             label:
-              "Demonstrates knowledge of applicable laws, policies, and governance expectations.",
+              "Demonstrates knowledge of applicable laws, policies, and CBN governance expectations.",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "b_optional_comments",
-            label: "Optional comments",
+            label: "Optional Comments: _________________",
             type: "long_text",
           },
         ],
       },
       {
-        title: "Section C — Governance, Risk & Compliance Oversight",
+        title: "SECTION C — GOVERNANCE, RISK & COMPLIANCE OVERSIGHT",
         questions: [
           {
             key: "c1_risk_controls",
-            label: "Provides robust oversight of risk management and internal controls.",
+            label: "Provides robust oversight of risk management and internal controls",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "c2_compliance_culture",
-            label: "Supports a strong culture of compliance and ethical standards.",
+            label: "Supports a strong culture of compliance and ethical standards",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "c3_compliance_discussions",
-            label: "Engages constructively in compliance discussions and risk mitigation.",
+            label: "Engages constructively in compliance discussions and risk mitigation",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "c4_balance_oversight",
-            label:
-              "Promotes a balance between oversight and respect for management’s role.",
+            label: "Promotes a balance between oversight and respect for management’s role",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "c5_risk_controls_repeat",
-            label: "Provides robust oversight of risk management and internal controls.",
+            label: "Provides robust oversight of risk management and internal controls",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "c_optional_comments",
-            label: "Optional comments",
+            label: "Optional Comments: _________________",
             type: "long_text",
           },
         ],
       },
       {
-        title: "Section D — Independence, Integrity & Collision Avoidance",
+        title: "SECTION D — INDEPENDENCE, INTEGRITY & COLLISION AVOIDANCE",
         description:
-          "Reflects expectations on director independence, integrity, and effective governance behaviour.",
+          "(Reflects expectations on director independence, integrity, and effective governance behaviour)",
         questions: [
           {
             key: "d1_independence",
-            label: "Demonstrates independence of thought and judgement.",
+            label: "Demonstrates independence of thought and judgement",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "d2_integrity",
-            label: "Upholds integrity in all interactions with Board & stakeholders.",
+            label: "Upholds integrity in all interactions with Board & stakeholders",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "d3_conflicts",
-            label: "Manages conflicts of interest effectively.",
+            label: "Manages conflicts of interest effectively",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "d4_confidentiality",
-            label: "Respects confidentiality and Board protocols.",
+            label: "Respects confidentiality and Board protocols",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "d5_independence_repeat",
-            label: "Demonstrates independence of thought and judgement.",
+            label: "Demonstrates independence of thought and judgement",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "d_optional_comments",
-            label: "Optional comments",
+            label: "Optional Comments: _________________",
             type: "long_text",
           },
         ],
       },
       {
-        title: "Section E — Engagement & Team Dynamics",
+        title: "SECTION E — ENGAGEMENT & TEAM DYNAMICS",
+        description: "(Behavioral aspects key to effective boards, as reinforced in governance practice)",
         questions: [
           {
             key: "e1_collaboration",
-            label: "Works collaboratively with fellow directors.",
+            label: "Works collaboratively with fellow directors",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "e2_challenges",
-            label:
-              "Challenges ideas constructively without undermining consensus.",
+            label: "Challenges ideas constructively without undermining consensus",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "e3_adds_value",
-            label: "Adds value to discussions during committee and plenary sessions.",
+            label: "Adds value to discussions during committee and plenary sessions",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "e_optional_comments",
-            label: "Optional comments",
+            label: "Optional Comments: _________________",
             type: "long_text",
           },
         ],
       },
       {
-        title: "Section F — Management Engagement & Oversight",
+        title: "SECTION F — MANAGEMENT ENGAGEMENT & OVERSIGHT",
+        description: "(Aligned with governance but respects management’s role)",
         questions: [
           {
             key: "f1_accountable",
-            label: "Holds management accountable for performance and compliance.",
+            label: "Holds management accountable for performance and compliance",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "f2_supports_management",
-            label: "Supports management with insight without micromanaging.",
+            label: "Supports management with insight without micromanaging",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "f3_constructive_feedback",
-            label: "Provides constructive feedback for improvement.",
+            label: "Provides constructive feedback for improvement",
             type: "rating_5",
             required: true,
             options: ratingOptions,
           },
           {
             key: "f_optional_comments",
-            label: "Optional comments",
+            label: "Optional Comments: _________________",
             type: "long_text",
           },
         ],
       },
       {
-        title: "Section G — Overall Performance & Reappointment",
+        title: "SECTION G — OVERALL PERFORMANCE & REAPPOINTMENT",
+        description: "(For cumulative assessment)",
         questions: [
           {
             key: "g_strengths_strategic_vision",
-            label: "Strategic vision",
+            label: "1a Strategic vision",
             type: "rating_5",
+            subheading: "1. Key strengths:",
             options: ratingOptions,
           },
           {
             key: "g_strengths_long_term_thinking",
-            label: "Long term thinking",
+            label: "1b Long term thinking",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_adaptability",
-            label: "Adaptability",
+            label: "1c Adaptability",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_financial_literacy",
-            label: "Financial literacy",
+            label: "2a Financial literacy",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_financial_metrics",
-            label: "Understands financial metrics",
+            label: "2b Understands financial metrics",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_budget_oversight",
-            label: "Budget oversight",
+            label: "2c Budget oversight",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_governance_compliance",
-            label: "Governance & Compliance",
+            label: "3a Governance & Compliance",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_regulatory_knowledge",
-            label: "Regulatory knowledge",
+            label: "3b Regulatory knowledge",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_risk_management",
-            label: "Risk Management",
+            label: "3c Risk Management",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_leadership",
-            label: "Leadership & Influence",
+            label: "4a Leadership & Influence",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_communication",
-            label: "Effective Communication",
+            label: "4b Effective Communication",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_team_player",
-            label: "Team Player",
+            label: "4c Team Player",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_decision_making",
-            label: "Decision Making",
+            label: "5a Decision Making",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_data_driven",
-            label: "Data-driven approach",
+            label: "5b Data-driven approach",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_judgement",
-            label: "Judgement & insight",
+            label: "5c Judgement & insight",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_stakeholder_engagement",
-            label: "Stakeholder Engagement",
+            label: "6a Stakeholder Engagement",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_relationship_management",
-            label: "Relationship management",
+            label: "6b Relationship management",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_listening_skills",
-            label: "Listening skills",
+            label: "6c Listening skills",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_innovation",
-            label: "Innovation & Change Management",
+            label: "7a Innovation & Change Management",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_fostering_innovation",
-            label: "Fostering innovation",
+            label: "7b Fostering innovation",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_change_adaptability",
-            label: "Change adaptability",
+            label: "7c Change adaptability",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_accountability",
-            label: "Accountability & Integrity",
+            label: "8a Accountability & Integrity",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_ethical_leadership",
-            label: "Ethical leadership",
+            label: "8b Ethical leadership",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_responsiveness",
-            label: "Responsiveness",
+            label: "8c Responsiveness",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_continuous_learning",
-            label: "Continuous Learning",
+            label: "9a Continuous Learning",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_commitment_development",
-            label: "Commitment to development",
+            label: "9b Commitment to development",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_strengths_embraces_feedback",
-            label: "Embraces feedback",
+            label: "9c Embraces feedback",
             type: "rating_5",
             options: ratingOptions,
           },
           {
             key: "g_development_areas",
-            label: "Suggest areas for development",
+            label: "2. Suggest areas for development:",
             type: "long_text",
           },
           {
             key: "g_overall_rating",
-            label: "Overall performance rating",
+            label: "3. Overall performance rating:",
             type: "single_select",
             options: ["Poor", "Fair", "Good", "Very Good", "Excellent"],
           },
           {
             key: "g_reappoint",
-            label: "Recommend re-appointment?",
+            label: "4. Recommend re-appointment?",
             type: "single_select",
             options: ["Yes", "Yes with development support", "No"],
           },
           {
             key: "g_optional_comments",
-            label: "Optional comments",
+            label: "Optional Comments: _________________",
             type: "long_text",
           },
         ],
       },
       {
-        title: "Section H — Development & Training Needs",
+        title: "SECTION H — DEVELOPMENT & TRAINING NEEDS",
+        description: "(Training areas that promote compliance and board effectiveness)",
         questions: [
           {
             key: "h_training_needs",
-            label: "Recommended training areas",
+            label: "Please tick any recommended areas for this Director",
             type: "multi_select",
             options: [
-              "Regulatory updates & governance expectations",
+              "Regulatory updates & CBN governance expectations",
               "Risk & compliance management",
               "Advanced mortgage portfolio oversight",
               "Board leadership & governance best practices",

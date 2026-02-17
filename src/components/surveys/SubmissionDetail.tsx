@@ -2,7 +2,7 @@
 
 type SubmissionData = {
   answers?: Record<string, string | string[] | null>;
-};
+} & Record<string, unknown>;
 
 export function SubmissionDetail({
   survey,
@@ -11,7 +11,23 @@ export function SubmissionDetail({
   survey: SurveyDefinition;
   data: SubmissionData;
 }) {
-  const answers = data.answers ?? {};
+  const nestedAnswers =
+    data.answers && typeof data.answers === "object" && !Array.isArray(data.answers)
+      ? data.answers
+      : null;
+  const flatAnswers = Object.entries(data).reduce<Record<string, string | string[] | null>>(
+    (acc, [key, value]) => {
+      if (key === "answers") return acc;
+      if (typeof value === "string" || value === null) {
+        acc[key] = value;
+      } else if (Array.isArray(value) && value.every((item) => typeof item === "string")) {
+        acc[key] = value as string[];
+      }
+      return acc;
+    },
+    {}
+  );
+  const answers = nestedAnswers ?? flatAnswers;
 
   return (
     <div className="form-grid">

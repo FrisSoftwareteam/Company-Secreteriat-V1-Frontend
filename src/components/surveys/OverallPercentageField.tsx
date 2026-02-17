@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export function OverallPercentageField() {
+export function OverallPercentageField({ label = "Overall Percentage" }: { label?: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [percent, setPercent] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
@@ -23,7 +23,10 @@ export function OverallPercentageField() {
         .map((name) => form.querySelector<HTMLInputElement>(`input[type="radio"][name="${name}"]:checked`))
         .filter((input): input is HTMLInputElement => Boolean(input));
 
-      const earnedPoints = checkedInputs.reduce((sum, input) => sum + Number(input.value || 0), 0);
+      const earnedPoints = checkedInputs.reduce((sum, input) => {
+        const score = Number(input.getAttribute("data-score") || 0);
+        return sum + score;
+      }, 0);
       const maxPoints = totalQuestions * 5;
 
       setAnsweredCount(checkedInputs.length);
@@ -39,7 +42,7 @@ export function OverallPercentageField() {
   return (
     <div className="overall-percentage-field" ref={rootRef}>
       <div className="overall-percentage-head">
-        <label htmlFor="overall-percentage-display">Overall Percentage</label>
+        <label htmlFor="overall-percentage-display">{label}</label>
         <strong>{percent.toFixed(1)}%</strong>
       </div>
       <input

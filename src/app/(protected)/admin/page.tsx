@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiRequest, API_BASE_URL } from "@/lib/api";
-import { SurveyDefinition } from "@/lib/surveys";
+import { SurveyDefinition, surveys as localSurveys } from "@/lib/surveys";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 type AdminSubmission = {
@@ -13,6 +13,61 @@ type AdminSubmission = {
   createdAt: string;
   user?: { email: string } | null;
 };
+
+type AdminOverviewResponse = {
+  surveys?: SurveyDefinition[];
+  submissions?: AdminSubmission[];
+  countsBySurveySlug?: Record<string, number>;
+  recentSubmissions?: AdminSubmission[];
+  submissionCounts?: Record<string, number>;
+};
+
+type AdminResultsResponse = {
+  survey?: SurveyDefinition;
+  submissions?: AdminSubmission[];
+};
+
+type SurveysResponse = {
+  surveys?: SurveyDefinition[];
+};
+
+type DashboardResponse = {
+  surveys?: SurveyDefinition[];
+  submissions?: unknown[];
+};
+
+function normalizeSlug(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function buildDerivedCounts(submissions: AdminSubmission[]) {
+  const byNormalizedSlug: Record<string, number> = {};
+  for (const submission of submissions) {
+    const key = normalizeSlug(submission.surveySlug || "unknown");
+    byNormalizedSlug[key] = (byNormalizedSlug[key] ?? 0) + 1;
+  }
+  return byNormalizedSlug;
+}
+
+function extractArrayFromUnknown(input: unknown): unknown[] {
+  if (Array.isArray(input)) return input;
+  if (!input || typeof input !== "object") return [];
+  const obj = input as Record<string, unknown>;
+  const candidates = [
+    obj.submissions,
+    obj.recentSubmissions,
+    obj.items,
+    obj.rows,
+    obj.data,
+    (obj.data as Record<string, unknown> | undefined)?.items,
+    (obj.data as Record<string, unknown> | undefined)?.rows,
+    (obj.data as Record<string, unknown> | undefined)?.submissions,
+  ];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate;
+  }
+  return [];
+}
 
 async function downloadExport(slug: string, token: string) {
   const response = await fetch(`${API_BASE_URL}/api/admin/export/${slug}`, {
@@ -41,24 +96,218 @@ function AdminContent() {
   const [surveys, setSurveys] = useState<SurveyDefinition[]>([]);
   const [submissions, setSubmissions] = useState<AdminSubmission[]>([]);
   const [countsBySurveySlug, setCountsBySurveySlug] = useState<Record<string, number>>({});
+  const [error, setError] = useState("");
+  const [scopeNotice, setScopeNotice] = useState("");
+
+  const normalizeSubmissions = (items: unknown, fallbackSurveySlug?: string): AdminSubmission[] => {
+    const rows = extractArrayFromUnknown(items);
+    if (!Array.isArray(rows)) return [];
+    return rows
+      .map((item) => {
+        const row = item as Record<string, unknown>;
+        const surveySlug =
+          typeof row.surveySlug === "string"
+            ? row.surveySlug
+            : typeof row.survey_slug === "string"
+              ? row.survey_slug
+            : typeof row.slug === "string"
+              ? row.slug
+              : typeof row.surveyId === "string"
+                ? row.surveyId
+              : typeof row.survey_id === "string"
+                ? row.survey_id
+                : typeof (row.survey as { slug?: unknown } | undefined)?.slug === "string"
+                  ? String((row.survey as { slug?: unknown }).slug)
+                  : fallbackSurveySlug ?? "unknown";
+        const createdAt =
+          typeof row.createdAt === "string"
+            ? row.createdAt
+            : typeof row.created_at === "string"
+              ? String(row.created_at)
+              : typeof row.submittedAt === "string"
+                ? String(row.submittedAt)
+                : typeof row.updatedAt === "string"
+                  ? String(row.updatedAt)
+                  : typeof row.date === "string"
+                    ? String(row.date)
+              : new Date().toISOString();
+
+        const userRecord = row.user as { email?: unknown } | null | undefined;
+        const email =
+          userRecord?.email ??
+          (typeof row.userEmail === "string" ? row.userEmail : undefined) ??
+          (typeof row.email === "string" ? row.email : undefined);
+
+        return {
+          id:
+            typeof row.id === "string"
+              ? row.id
+              : typeof row._id === "string"
+                ? row._id
+                : typeof row.submissionId === "string"
+                  ? row.submissionId
+                  : String(row.id ?? row._id ?? row.submissionId ?? ""),
+          surveySlug,
+          createdAt,
+          user: email ? { email: String(email) } : null,
+        };
+      })
+      .filter((item) => item.id);
+  };
 
   useEffect(() => {
     if (!token) return;
+    setError("");
+    setScopeNotice("");
 
-    apiRequest<{
-      surveys: SurveyDefinition[];
-      submissions: AdminSubmission[];
-      countsBySurveySlug: Record<string, number>;
-    }>(`/api/admin/overview?q=${encodeURIComponent(q)}`, { method: "GET" }, token)
+    const loadOverviewFallback = async () => {
+      try {
+        const dashboardData = await apiRequest<DashboardResponse>("/api/dashboard", { method: "GET" }, token);
+        const dashboardSurveys = Array.isArray(dashboardData.surveys) ? dashboardData.surveys : [];
+        const dashboardSubmissions = normalizeSubmissions(dashboardData.submissions);
+        if (dashboardSubmissions.length > 0) {
+          const query = q.trim().toLowerCase();
+          const filtered = query
+            ? dashboardSubmissions.filter((item) => {
+                const email = item.user?.email?.toLowerCase() ?? "";
+                return (
+                  item.surveySlug.toLowerCase().includes(query) ||
+                  email.includes(query) ||
+                  item.id.toLowerCase().includes(query)
+                );
+              })
+            : dashboardSubmissions;
+          const recent = filtered
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 50);
+          setSurveys(dashboardSurveys.length > 0 ? dashboardSurveys : localSurveys);
+          setSubmissions(recent);
+          setCountsBySurveySlug(buildDerivedCounts(dashboardSubmissions));
+          setError("");
+          setScopeNotice("Showing your own submissions because admin aggregation endpoints are unavailable.");
+          return;
+        }
+      } catch {
+        // Continue to broader fallbacks.
+      }
+
+      let nextSurveys: SurveyDefinition[] = [];
+      try {
+        const surveysPayload = await apiRequest<SurveysResponse | SurveyDefinition[]>(
+          "/api/surveys",
+          { method: "GET" },
+          token
+        );
+        nextSurveys = Array.isArray(surveysPayload)
+          ? surveysPayload
+          : Array.isArray((surveysPayload as SurveysResponse).surveys)
+            ? (surveysPayload as SurveysResponse).surveys!
+            : [];
+      } catch {
+        nextSurveys = localSurveys;
+      }
+
+      const settled = await Promise.allSettled(
+        nextSurveys.map((survey) =>
+          apiRequest<AdminResultsResponse>(`/api/admin/results/${survey.slug}`, { method: "GET" }, token)
+            .then((data) => ({ slug: survey.slug, submissions: normalizeSubmissions(data, survey.slug) }))
+        )
+      );
+
+      const counts: Record<string, number> = {};
+      const merged: AdminSubmission[] = [];
+
+      for (const result of settled) {
+        if (result.status !== "fulfilled") continue;
+        counts[result.value.slug] = result.value.submissions.length;
+        merged.push(...result.value.submissions);
+      }
+
+      const query = q.trim().toLowerCase();
+      const filtered = query
+        ? merged.filter((item) => {
+            const email = item.user?.email?.toLowerCase() ?? "";
+            return (
+              item.surveySlug.toLowerCase().includes(query) ||
+              email.includes(query) ||
+              item.id.toLowerCase().includes(query)
+            );
+          })
+        : merged;
+
+      const recent = filtered
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 50);
+
+      if (recent.length === 0) {
+        const submissionsSettled = await Promise.allSettled([
+          apiRequest<unknown>("/api/admin/submissions", { method: "GET" }, token),
+          apiRequest<unknown>("/api/admin/recent-submissions", { method: "GET" }, token),
+        ]);
+
+        const extra = submissionsSettled.flatMap((result) =>
+          result.status === "fulfilled" ? normalizeSubmissions(result.value) : []
+        );
+
+        if (extra.length > 0) {
+          const extraFiltered = query
+            ? extra.filter((item) => {
+                const email = item.user?.email?.toLowerCase() ?? "";
+                return (
+                  item.surveySlug.toLowerCase().includes(query) ||
+                  email.includes(query) ||
+                  item.id.toLowerCase().includes(query)
+                );
+              })
+            : extra;
+
+          const extraRecent = extraFiltered
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+            .slice(0, 50);
+
+          for (const item of extra) {
+            counts[item.surveySlug] = (counts[item.surveySlug] ?? 0) + 1;
+          }
+
+          setSurveys(nextSurveys);
+          setSubmissions(extraRecent);
+          setCountsBySurveySlug(counts);
+          setError("");
+          return;
+        }
+      }
+
+      setSurveys(nextSurveys);
+      setSubmissions(recent);
+      setCountsBySurveySlug(counts);
+      setError("");
+      if (recent.length > 0) {
+        setScopeNotice("Showing fallback aggregated data. Admin overview endpoint is unavailable.");
+      }
+    };
+
+    apiRequest<AdminOverviewResponse>(`/api/admin/overview?q=${encodeURIComponent(q)}`, { method: "GET" }, token)
       .then((data) => {
-        setSurveys(data.surveys);
-        setSubmissions(data.submissions);
-        setCountsBySurveySlug(data.countsBySurveySlug);
+        const nextSurveys = Array.isArray(data.surveys) ? data.surveys : [];
+        const nextSubmissions = normalizeSubmissions(data);
+        const nextCounts = data.countsBySurveySlug ?? data.submissionCounts ?? {};
+
+        setSurveys(nextSurveys);
+        setSubmissions(nextSubmissions);
+        setCountsBySurveySlug(nextCounts);
+        setScopeNotice("");
       })
-      .catch(() => {
-        setSurveys([]);
-        setSubmissions([]);
-        setCountsBySurveySlug({});
+      .catch(async () => {
+        try {
+          await loadOverviewFallback();
+        } catch (fallbackErr) {
+          const fallbackMessage =
+            fallbackErr instanceof Error ? fallbackErr.message : "Unable to load admin overview.";
+          setSurveys([]);
+          setSubmissions([]);
+          setCountsBySurveySlug({});
+          setError(fallbackMessage);
+        }
       });
   }, [token, q]);
 
@@ -96,29 +345,42 @@ function AdminContent() {
               </tr>
             </thead>
             <tbody>
-              {surveys.map((survey) => (
-                <tr key={survey.slug}>
-                  <td>
-                    <div className="font-bold">{survey.title}</div>
-                    <div className="text-secondary text-xs">{survey.description}</div>
-                  </td>
-                  <td>{countsBySurveySlug[survey.slug] ?? 0}</td>
-                  <td style={{ textAlign: "right" }}>
-                    <div className="flex items-center justify-between" style={{ justifyContent: "flex-end", gap: 12 }}>
-                      <Link href={`/admin/results/${survey.slug}`} className="text-primary font-bold hover:underline">
-                        View Results
-                      </Link>
-                      <button
-                        type="button"
-                        className="text-secondary hover:underline"
-                        onClick={() => token && downloadExport(survey.slug, token)}
-                      >
-                        CSV
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              {(() => {
+                const derivedCounts = buildDerivedCounts(submissions);
+                const countsEntries = Object.entries(countsBySurveySlug);
+                return surveys.map((survey) => {
+                  const directCount = countsBySurveySlug[survey.slug];
+                  const normalizedSurveySlug = normalizeSlug(survey.slug);
+                  const normalizedCountFromMap =
+                    countsEntries.find(([key]) => normalizeSlug(key) === normalizedSurveySlug)?.[1] ?? 0;
+                  const derivedCount = derivedCounts[normalizedSurveySlug] ?? 0;
+                  const resolvedCount = Math.max(directCount ?? 0, normalizedCountFromMap, derivedCount);
+
+                  return (
+                    <tr key={survey.slug}>
+                      <td>
+                        <div className="font-bold">{survey.title}</div>
+                        <div className="text-secondary text-xs">{survey.description}</div>
+                      </td>
+                      <td>{resolvedCount}</td>
+                      <td style={{ textAlign: "right" }}>
+                        <div className="flex items-center justify-between" style={{ justifyContent: "flex-end", gap: 12 }}>
+                          <Link href={`/admin/results/${survey.slug}`} className="text-primary font-bold hover:underline">
+                            View Results
+                          </Link>
+                          <button
+                            type="button"
+                            className="text-secondary hover:underline"
+                            onClick={() => token && downloadExport(survey.slug, token)}
+                          >
+                            CSV
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                });
+              })()}
             </tbody>
           </table>
         </div>
@@ -126,6 +388,16 @@ function AdminContent() {
 
       <div className="card">
         <h2 className="text-xl mb-4">Recent Submissions</h2>
+        {scopeNotice ? (
+          <p className="notice" style={{ marginBottom: "1rem" }}>
+            {scopeNotice}
+          </p>
+        ) : null}
+        {error ? (
+          <p className="notice" style={{ marginBottom: "1rem" }}>
+            {error}
+          </p>
+        ) : null}
         {submissions.length === 0 ? (
           <p className="p-4 text-secondary text-center">{q ? `No submissions match "${q}".` : "No submissions yet."}</p>
         ) : (

@@ -25,7 +25,7 @@ export default function SubmissionPage() {
     if (!token || !params?.id) return;
 
     apiRequest<{ survey: SurveyDefinition; submission: Submission }>(
-      `/api/admin/submissions/${params.id}`,
+      `/api/admin/submissions?id=${encodeURIComponent(params.id)}`,
       { method: "GET" },
       token
     )
