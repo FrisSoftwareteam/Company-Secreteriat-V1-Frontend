@@ -70,7 +70,7 @@ function extractArrayFromUnknown(input: unknown): unknown[] {
 }
 
 async function downloadExport(slug: string, token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/export/${slug}`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/export?slug=${encodeURIComponent(slug)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -160,6 +160,29 @@ function AdminContent() {
     setError("");
     setScopeNotice("");
 
+    const loadCountsFromResults = async (items: SurveyDefinition[]) => {
+      const settled = await Promise.allSettled(
+        items.map((survey) =>
+          apiRequest<AdminResultsResponse>(`/api/admin/results?slug=${encodeURIComponent(survey.slug)}`, { method: "GET" }, token)
+            .then((data) => ({
+              slug: survey.slug,
+              submissions: normalizeSubmissions(data, survey.slug),
+            }))
+        )
+      );
+
+      const counts: Record<string, number> = {};
+      const merged: AdminSubmission[] = [];
+
+      for (const result of settled) {
+        if (result.status !== "fulfilled") continue;
+        counts[result.value.slug] = result.value.submissions.length;
+        merged.push(...result.value.submissions);
+      }
+
+      return { counts, merged };
+    };
+
     const loadOverviewFallback = async () => {
       try {
         const dashboardData = await apiRequest<DashboardResponse>("/api/dashboard", { method: "GET" }, token);
@@ -209,10 +232,12 @@ function AdminContent() {
 
       const settled = await Promise.allSettled(
         nextSurveys.map((survey) =>
-          apiRequest<AdminResultsResponse>(`/api/admin/results/${survey.slug}`, { method: "GET" }, token)
+          apiRequest<AdminResultsResponse>(`/api/admin/results?slug=${encodeURIComponent(survey.slug)}`, { method: "GET" }, token)
             .then((data) => ({ slug: survey.slug, submissions: normalizeSubmissions(data, survey.slug) }))
         )
       );
+
+      const fulfilledCount = settled.filter((result) => result.status === "fulfilled").length;
 
       const counts: Record<string, number> = {};
       const merged: AdminSubmission[] = [];
@@ -238,6 +263,10 @@ function AdminContent() {
       const recent = filtered
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 50);
+
+      if (fulfilledCount === 0) {
+        throw new Error("Unable to load admin submissions with this session. Please log out and log in again.");
+      }
 
       if (recent.length === 0) {
         const submissionsSettled = await Promise.allSettled([
@@ -287,10 +316,33 @@ function AdminContent() {
     };
 
     apiRequest<AdminOverviewResponse>(`/api/admin/overview?q=${encodeURIComponent(q)}`, { method: "GET" }, token)
-      .then((data) => {
+      .then(async (data) => {
         const nextSurveys = Array.isArray(data.surveys) ? data.surveys : [];
         const nextSubmissions = normalizeSubmissions(data);
         const nextCounts = data.countsBySurveySlug ?? data.submissionCounts ?? {};
+
+        const hasAnyCount = Object.values(nextCounts).some((value) => Number(value) > 0);
+        if ((!hasAnyCount || nextSubmissions.length === 0) && nextSurveys.length > 0) {
+          const fallback = await loadCountsFromResults(nextSurveys);
+          const fallbackHasCounts = Object.values(fallback.counts).some((value) => Number(value) > 0);
+          if (fallbackHasCounts || fallback.merged.length > 0) {
+            const mergedCounts = { ...nextCounts };
+            for (const [key, value] of Object.entries(fallback.counts)) {
+              mergedCounts[key] = Math.max(Number(mergedCounts[key] ?? 0), Number(value ?? 0));
+            }
+            setSurveys(nextSurveys);
+            setSubmissions(
+              nextSubmissions.length > 0
+                ? nextSubmissions
+                : fallback.merged
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+                    .slice(0, 50)
+            );
+            setCountsBySurveySlug(mergedCounts);
+            setScopeNotice("Showing recalculated counts from submission results.");
+            return;
+          }
+        }
 
         setSurveys(nextSurveys);
         setSubmissions(nextSubmissions);

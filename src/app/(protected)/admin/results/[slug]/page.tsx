@@ -35,7 +35,7 @@ const SCORE_BY_LIKERT_LABEL: Record<string, number> = {
 };
 
 async function downloadExport(slug: string, token: string) {
-  const response = await fetch(`${API_BASE_URL}/api/admin/export/${slug}`, {
+  const response = await fetch(`${API_BASE_URL}/api/admin/export?slug=${encodeURIComponent(slug)}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) throw new Error("Export failed");

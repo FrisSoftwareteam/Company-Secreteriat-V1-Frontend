@@ -22,7 +22,7 @@ function SurveyInstructions({ slug }: { slug: string }) {
         <p style={{ margin: "0 0 12px" }}>Click submit when the questionnaire is fully completed.</p>
 
         <p style={{ margin: "0 0 8px", fontWeight: 700 }}>Evaluation Scale</p>
-        <p style={{ margin: "0 0 6px" }}>Please rate your peer on a scale of 1 to 5:</p>
+        <p style={{ margin: "0 0 6px" }}>Please rate on a scale of 1 to 5</p>
         <p style={{ margin: "0 0 4px" }}>5: Exceptional (Always exceeds expectations)</p>
         <p style={{ margin: "0 0 4px" }}>4: Strong (Consistently meets and often exceeds)</p>
         <p style={{ margin: "0 0 4px" }}>3: Competent (Meets expectations)</p>
@@ -43,7 +43,7 @@ function SurveyInstructions({ slug }: { slug: string }) {
         <p style={{ margin: "0 0 12px" }}>Click submit when the questionnaire is fully completed.</p>
 
         <p style={{ margin: "0 0 8px", fontWeight: 700 }}>Evaluation Scale</p>
-        <p style={{ margin: "0 0 6px" }}>Please rate your peer on a scale of 1 to 5:</p>
+        <p style={{ margin: "0 0 6px" }}>Please rate on a scale of 1 to 5</p>
         <p style={{ margin: "0 0 4px" }}>5: Strongly Agree</p>
         <p style={{ margin: "0 0 4px" }}>4: Agree</p>
         <p style={{ margin: "0 0 4px" }}>3: Neutral</p>

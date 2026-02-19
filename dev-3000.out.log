@@ -1,0 +1,35 @@
+
+> company-secretariat-frontend@0.1.0 dev
+> next dev -p 3000
+
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.21.176.1:3000
+- Environments: .env.local
+
+✓ Starting...
+Creating turbopack project {
+  dir: 'c:\\Users\\Administrator\\Documents\\My Projects\\Company Secreteriat Solution\\Frontend',
+  testMode: true
+}
+✓ Ready in 2.7s
+○ Compiling / ...
+ GET / 307 in 9.0s (compile: 7.9s, render: 1026ms)
+ GET /login 200 in 2.1s (compile: 1751ms, render: 339ms)
+ GET /admin 200 in 2.1s (compile: 1834ms, render: 240ms)
+ GET /api/admin/overview?q= 200 in 6.0s (compile: 1501ms, render: 4.5s)
+ GET /api/admin/overview?q= 200 in 1261ms (compile: 9ms, render: 1252ms)
+ GET / 307 in 113ms (compile: 10ms, render: 102ms)
+ GET /login 200 in 107ms (compile: 8ms, render: 100ms)
+ GET /admin/results/peer-evaluation 200 in 2.0s (compile: 1945ms, render: 62ms)
+ GET /api/admin/results?slug=peer-evaluation 200 in 3.3s (compile: 473ms, render: 2.8s)
+ GET /api/admin/results?slug=peer-evaluation 200 in 1265ms (compile: 15ms, render: 1250ms)
+ GET /api/admin/overview?q= 200 in 1614ms (compile: 10ms, render: 1604ms)
+ GET /api/admin/overview?q= 200 in 1393ms (compile: 5ms, render: 1388ms)
+ GET /login 200 in 145ms (compile: 8ms, render: 137ms)
+ GET /login 200 in 79ms (compile: 23ms, render: 56ms)
+ POST /api/auth/login 200 in 2.1s (compile: 513ms, render: 1543ms)
+ GET /dashboard 200 in 936ms (compile: 793ms, render: 142ms)
+ GET /dashboard 200 in 89ms (compile: 10ms, render: 79ms)
+ GET /surveys/board-evaluation 200 in 2.1s (compile: 1997ms, render: 66ms)
+✓ Compiled in 52ms
