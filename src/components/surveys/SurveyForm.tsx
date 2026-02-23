@@ -8,6 +8,62 @@ import { OverallPercentageField } from "@/components/surveys/OverallPercentageFi
 import { apiRequest } from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
 
+const LEGACY_HIDDEN_BOARD_QUESTION_KEYS = new Set([
+  "board_diversity_reflect",
+  "board_diversity_importance",
+  "board_composition_aligns",
+  "company_secretary_experience",
+  "company_secretary_senior_staff",
+  "company_secretary_assists",
+  "management_collaboration",
+  "transparency",
+  "strategic_oversight",
+  "succession_plan_review",
+  "director_contribution",
+  "directors_engaged",
+  "meeting_effectiveness",
+  "conflict_resolution_process",
+  "conflict_handling",
+  "board_size_effective",
+  "chairperson_participation",
+  "board_effective_governance",
+  "committees_effective",
+  "committees_report_back",
+  "committees_integrate",
+  "independent_directors_number",
+  "independent_directors_contribute",
+  "meeting_materials",
+  "risk_management",
+  "consensus_suggestion",
+]);
+
+const BOARD_LABEL_OVERRIDE_BY_KEY: Record<string, string> = {
+  board_composition_diverse_mix:
+    "The board possesses a diverse mix of gender, backgrounds, skills and experiences (i.e. the necessary expertise and diversity to effectively oversee the organisation)?",
+  chairperson_facilitates:
+    "The chairperson effectively facilitates board meetings, discussions and encourages active participation from all board members.",
+  vision_strategy:
+    "The board sets a clear and compelling vision for the organization. It effectively manages and oversees the organisation's strategic direction.",
+  stakeholder_interests:
+    "The board considers stakeholders' interests in decision-making and its activities and decisions are transparent to stakeholders.",
+  stakeholder_engagement:
+    "The board engages well with executive management, shareholders and other stakeholders to gather insights and feedback.",
+  board_size_appropriate:
+    "The current size and structure of the board is appropriate in relation to the complexity of the organization and allows for effective decision-making and diverse viewpoints. It has an adequate mix of non-executive, independent, and executive directors, and they all contribute to board effectiveness to a large extent.",
+  board_understands_roles:
+    "The board understands its roles and responsibilities and is effective in fulfilling its governance responsibilities",
+  committees_understanding:
+    "Board members adequately understand the roles and responsibilities of each committee, function effectively, integrate with the overall board structure and decision-making processes and frequently report back to the full board.",
+  meetings_frequency:
+    "Meetings are held regularly, at appropriate intervals and Board members receive meeting materials in advance to prepare adequately.",
+  attendance_rate:
+    "The attendance rate of board members at meetings is always good and deliberations fruitful and effective",
+  consensus_building:
+    "There is a clear process for fostering participation in consensus building and decision making as well as addressing conflicts and conflicts of interests.",
+  compliance_legal:
+    "The board effectively and routinely ensures compliance with regulatory and legal requirements. It also oversees the company's risk management processes and policies.",
+};
+
 function shouldNumberQuestion(question: SurveyQuestion) {
   if (question.key.startsWith("g_")) return false;
   return !["short_text", "long_text", "date"].includes(question.type);
@@ -46,9 +102,9 @@ function getOptionScore(question: SurveyQuestion, option: string) {
 }
 
 function getBoardSectionRank(title: string) {
-  const match = title.match(/^Section\s+([A-H])/i);
+  const match = title.match(/^Section\s+([A-G])/i);
   if (!match) return Number.MAX_SAFE_INTEGER;
-  const order = "ABCDEFGH";
+  const order = "ABCDEFG";
   const index = order.indexOf(match[1].toUpperCase());
   return index === -1 ? Number.MAX_SAFE_INTEGER : index;
 }
@@ -57,11 +113,10 @@ const BOARD_SECTION_TITLES = {
   A: "Section A: Governance Framework",
   B: "Section B: Board Processes",
   C: "Section C: Performance Review",
-  D: "Section D: Communication and Reporting",
-  E: "Section E: Stakeholder Engagement",
-  F: "Section F: Strategic Oversight",
-  G: "Section G: Compliance & Risk Management",
-  H: "Section H: Recommendations",
+  D: "Section D: Stakeholder Engagement, Communication and Reporting",
+  E: "Section E: Strategic Oversight",
+  F: "Section F: Regulatory Compliance & Risk Management",
+  G: "Section G: Recommendations",
 } as const;
 
 type BoardSectionLetter = keyof typeof BOARD_SECTION_TITLES;
@@ -71,32 +126,30 @@ function normalizeBoardSectionTitle(section: SurveyDefinition["sections"][number
 
   // Force stable canonical headings when backend payload has wrong letters.
   if (keys.has("improvement_areas") || keys.has("additional_comments")) {
-    return "Section H: Recommendations";
+    return "Section G: Recommendations";
   }
   if (
+    keys.has("compliance_risk_oversight") ||
     keys.has("compliance_legal") ||
     keys.has("risk_management") ||
     keys.has("governance_framework") ||
     keys.has("regulatory_knowledge")
   ) {
-    return "Section G: Compliance & Risk Management";
+    return "Section F: Regulatory Compliance & Risk Management";
   }
-  if (keys.has("vision_strategy") || keys.has("strategic_oversight")) {
-    return "Section F: Strategic Oversight";
+  if (keys.has("vision_strategy") || keys.has("strategic_oversight") || keys.has("goal_setting") || keys.has("succession_plan") || keys.has("resource_allocation")) {
+    return "Section E: Strategic Oversight";
   }
-  if (keys.has("stakeholder_interests") || keys.has("management_collaboration")) {
-    return "Section E: Stakeholder Engagement";
+  if (keys.has("stakeholder_transparency") || keys.has("stakeholder_interests") || keys.has("stakeholder_engagement") || keys.has("management_collaboration") || keys.has("whistleblowing")) {
+    return "Section D: Stakeholder Engagement, Communication and Reporting";
   }
-  if (keys.has("transparency") || keys.has("whistleblowing")) {
-    return "Section D: Communication and Reporting";
-  }
-  if (keys.has("board_self_assessment") || keys.has("director_contribution")) {
+  if (keys.has("board_self_assessment") || keys.has("director_contribution") || keys.has("directors_engaged")) {
     return "Section C: Performance Review";
   }
-  if (keys.has("meetings_frequency") || keys.has("conflict_handling")) {
+  if (keys.has("meetings_frequency_preparation") || keys.has("meetings_frequency") || keys.has("meeting_materials") || keys.has("attendance_meeting_effectiveness") || keys.has("conflict_handling") || keys.has("consensus_conflict_resolution")) {
     return "Section B: Board Processes";
   }
-  if (keys.has("board_composition_diverse_mix") || keys.has("independent_directors_contribute")) {
+  if (keys.has("board_composition_diverse_mix") || keys.has("board_structure_size_independence") || keys.has("committees_roles_integration") || keys.has("independent_directors_contribute")) {
     return "Section A: Governance Framework";
   }
 
@@ -111,27 +164,84 @@ function normalizePeerSectionTitle(section: SurveyDefinition["sections"][number]
   return section.title;
 }
 
+function normalizePeerSections(sections: SurveyDefinition["sections"]): SurveyDefinition["sections"] {
+  return sections
+    .filter((section) => {
+      const isSectionGHByTitle = /SECTION\s*[GH]\b/i.test(section.title);
+      const hasSectionGHKeys = section.questions.some(
+        (question) => question.key.startsWith("g_") || question.key.startsWith("h_")
+      );
+      return !(isSectionGHByTitle || hasSectionGHKeys);
+    })
+    .map((section) => {
+    const isSectionE = /SECTION\s*E/i.test(section.title);
+    if (!isSectionE) return section;
+    const hasPeerSectionEQuestion = section.questions.some((question) => {
+      const text = question.label.toLowerCase();
+      return (
+        [
+          "e1_collaboration",
+          "e2_challenges",
+          "e3_adds_value",
+          "e1_collaboration_constructive_challenge",
+          "e2_adds_value",
+        ].includes(question.key) ||
+        text.includes("works collaboratively with fellow directors") ||
+        text.includes("challenges ideas constructively without undermining consensus") ||
+        text.includes("adds value to discussions during committee and plenary sessions")
+      );
+    });
+    if (!hasPeerSectionEQuestion) return section;
+
+    const optionalComments = section.questions.find((question) => question.key === "e_optional_comments") ?? {
+      key: "e_optional_comments",
+      label: "Optional Comments: _________________",
+      type: "long_text" as const,
+    };
+
+    return {
+      ...section,
+      questions: [
+        {
+          key: "e1_collaboration_constructive_challenge",
+          label:
+            "Works collaboratively with fellow directors and challenges ideas constructively without undermining consensus",
+          type: "rating_5",
+          required: true,
+          options: ["1", "2", "3", "4", "5"],
+        },
+        {
+          key: "e2_adds_value",
+          label: "Adds value to discussions during committee and plenary sessions",
+          type: "rating_5",
+          required: true,
+          options: ["1", "2", "3", "4", "5"],
+        },
+        optionalComments,
+      ],
+    };
+  });
+}
+
 function getBoardSectionLetterForQuestion(question: SurveyQuestion, resolvedNumber?: number): BoardSectionLetter {
-  if (question.key === "improvement_areas" || question.key === "additional_comments") return "H";
-  if (question.key === "compliance_legal" || question.key === "risk_management" || question.key === "governance_framework" || question.key === "regulatory_knowledge") return "G";
-  if (question.key === "vision_strategy" || question.key === "strategic_oversight" || question.key === "goal_setting" || question.key === "succession_plan" || question.key === "succession_plan_review" || question.key === "resource_allocation") return "F";
-  if (question.key === "stakeholder_interests" || question.key === "stakeholder_engagement" || question.key === "management_collaboration") return "E";
-  if (question.key === "transparency" || question.key === "whistleblowing") return "D";
+  if (question.key === "improvement_areas" || question.key === "additional_comments") return "G";
+  if (question.key === "regulatory_knowledge" || question.key === "compliance_risk_oversight" || question.key === "compliance_legal" || question.key === "risk_management" || question.key === "governance_framework") return "F";
+  if (question.key === "vision_strategy" || question.key === "strategic_oversight" || question.key === "goal_setting" || question.key === "succession_plan" || question.key === "succession_plan_review" || question.key === "resource_allocation") return "E";
+  if (question.key === "stakeholder_transparency" || question.key === "stakeholder_interests" || question.key === "stakeholder_engagement" || question.key === "management_collaboration" || question.key === "whistleblowing") return "D";
   if (question.key === "board_self_assessment" || question.key === "director_contribution" || question.key === "directors_engaged") return "C";
-  if (question.key === "meetings_frequency" || question.key === "meeting_materials" || question.key === "agenda_clarity" || question.key === "attendance_rate" || question.key === "meeting_effectiveness" || question.key === "company_secretary_experience" || question.key === "company_secretary_senior_staff" || question.key === "company_secretary_assists" || question.key === "information_flow" || question.key === "decision_making" || question.key === "consensus_building" || question.key === "consensus_suggestion" || question.key === "conflict_resolution_process" || question.key === "conflict_resolution_suggestion" || question.key === "conflict_handling") return "B";
-  if (question.key === "board_composition_diverse_mix" || question.key === "board_composition_additional_skills" || question.key === "board_diversity_reflect" || question.key === "board_diversity_importance" || question.key === "board_composition_aligns" || question.key === "board_guidelines_appointment" || question.key === "board_size_appropriate" || question.key === "board_size_effective" || question.key === "board_understands_roles" || question.key === "board_induction_training" || question.key === "chairperson_facilitates" || question.key === "chairperson_participation" || question.key === "board_effective_governance" || question.key === "committees_charters" || question.key === "committees_understanding" || question.key === "committees_effective" || question.key === "committees_report_back" || question.key === "committees_integrate" || question.key === "independent_directors_number" || question.key === "independent_directors_contribute") return "A";
+  if (question.key === "meetings_frequency_preparation" || question.key === "meetings_frequency" || question.key === "meeting_materials" || question.key === "agenda_clarity" || question.key === "attendance_meeting_effectiveness" || question.key === "attendance_rate" || question.key === "meeting_effectiveness" || question.key === "information_flow" || question.key === "decision_making" || question.key === "consensus_conflict_resolution" || question.key === "consensus_building" || question.key === "consensus_suggestion" || question.key === "conflict_resolution_process" || question.key === "conflict_resolution_suggestion" || question.key === "conflict_handling") return "B";
+  if (question.key === "board_composition_diverse_mix" || question.key === "board_composition_additional_skills" || question.key === "board_guidelines_appointment" || question.key === "board_structure_size_independence" || question.key === "board_size_appropriate" || question.key === "board_size_effective" || question.key === "board_understands_roles" || question.key === "board_induction_training" || question.key === "chairperson_facilitates" || question.key === "chairperson_participation" || question.key === "board_effective_governance" || question.key === "committees_charters" || question.key === "committees_roles_integration" || question.key === "committees_understanding" || question.key === "committees_effective" || question.key === "committees_report_back" || question.key === "committees_integrate" || question.key === "independent_directors_number" || question.key === "independent_directors_contribute") return "A";
 
   if (resolvedNumber) {
-    if (resolvedNumber <= 19) return "A";
-    if (resolvedNumber <= 32) return "B";
-    if (resolvedNumber <= 35) return "C";
-    if (resolvedNumber <= 37) return "D";
-    if (resolvedNumber <= 40) return "E";
-    if (resolvedNumber <= 46) return "F";
-    if (resolvedNumber <= 50) return "G";
+    if (resolvedNumber <= 8) return "A";
+    if (resolvedNumber <= 14) return "B";
+    if (resolvedNumber <= 15) return "C";
+    if (resolvedNumber <= 18) return "D";
+    if (resolvedNumber <= 22) return "E";
+    if (resolvedNumber <= 25) return "F";
   }
 
-  return "H";
+  return "G";
 }
 
 function normalizeBoardSections(sections: SurveyDefinition["sections"]): SurveyDefinition["sections"] {
@@ -143,6 +253,21 @@ function normalizeBoardSections(sections: SurveyDefinition["sections"]): SurveyD
       resolvedNumber: question.displayNumber ?? getBoardDisplayNumberFallback(question),
     }))
   );
+  const hasCombinedComplianceQuestion = flattened.some(
+    (entry) => entry.question.key === "compliance_risk_oversight"
+  );
+  const hasCombinedStakeholderQuestion = flattened.some(
+    (entry) => entry.question.key === "stakeholder_transparency"
+  );
+  const hasCombinedBoardStructureQuestion = flattened.some(
+    (entry) => entry.question.key === "board_structure_size_independence"
+  );
+  const hasCombinedCommitteesQuestion = flattened.some(
+    (entry) => entry.question.key === "committees_roles_integration"
+  );
+  const hasCombinedMeetingFrequencyQuestion = flattened.some(
+    (entry) => entry.question.key === "meetings_frequency_preparation"
+  );
 
   const ordered = flattened.sort((a, b) => {
     const aNum = a.resolvedNumber ?? Number.MAX_SAFE_INTEGER;
@@ -152,14 +277,24 @@ function normalizeBoardSections(sections: SurveyDefinition["sections"]): SurveyD
     return a.questionIndex - b.questionIndex;
   });
 
-  const hiddenBoardQuestionKeys = new Set([
-    "board_composition_additional_skills",
-    "consensus_suggestion",
-  ]);
-
   const grouped = new Map<BoardSectionLetter, SurveyQuestion[]>();
   for (const entry of ordered) {
-    if (hiddenBoardQuestionKeys.has(entry.question.key)) {
+    if (hasCombinedComplianceQuestion && entry.question.key === "compliance_legal") {
+      continue;
+    }
+    if (hasCombinedStakeholderQuestion && entry.question.key === "stakeholder_interests") {
+      continue;
+    }
+    if (hasCombinedBoardStructureQuestion && entry.question.key === "board_size_appropriate") {
+      continue;
+    }
+    if (hasCombinedCommitteesQuestion && entry.question.key === "committees_understanding") {
+      continue;
+    }
+    if (hasCombinedMeetingFrequencyQuestion && entry.question.key === "meetings_frequency") {
+      continue;
+    }
+    if (LEGACY_HIDDEN_BOARD_QUESTION_KEYS.has(entry.question.key)) {
       continue;
     }
     const letter = getBoardSectionLetterForQuestion(entry.question, entry.resolvedNumber);
@@ -168,7 +303,7 @@ function normalizeBoardSections(sections: SurveyDefinition["sections"]): SurveyD
     grouped.set(letter, existing);
   }
 
-  const letters: BoardSectionLetter[] = ["A", "B", "C", "D", "E", "F", "G", "H"];
+  const letters: BoardSectionLetter[] = ["A", "B", "C", "D", "E", "F", "G"];
   return letters
     .filter((letter) => (grouped.get(letter)?.length ?? 0) > 0)
     .map((letter) => ({
@@ -179,94 +314,73 @@ function normalizeBoardSections(sections: SurveyDefinition["sections"]): SurveyD
 }
 
 const BOARD_SUBHEADING_BY_KEY: Record<string, string> = {
-  board_composition_diverse_mix: "Board Composition",
-  board_diversity_reflect: "Board Diversity",
-  board_size_appropriate: "Board Structure",
-  board_understands_roles: "Competence (Understanding of Roles and Responsibilities)",
+  board_composition_diverse_mix: "Board Composition & Diversity",
+  board_size_appropriate: "Board Structure, Size & Independence",
+  board_structure_size_independence: "Board Structure, Size & Independence",
+  board_understands_roles: "Competence (Understanding of Roles, Responsibilities & Overall Effectiveness)",
   board_induction_training: "Induction & Training",
   chairperson_facilitates: "Role of Chairperson",
-  board_effective_governance: "Overall Effectiveness",
   committees_charters: "Board Committees",
-  committees_integrate: "Integration of Committees",
-  independent_directors_number: "Independence",
-  meetings_frequency: "Frequency",
-  meeting_materials: "Preparation",
+  committees_understanding: "Roles, Responsibilities & Integration of Committees",
+  committees_roles_integration: "Roles, Responsibilities & Integration of Committees",
+  meetings_frequency: "Meeting Frequency & Preparation",
+  meetings_frequency_preparation: "Meeting Frequency & Preparation",
   agenda_clarity: "Agenda Setting",
-  attendance_rate: "Attendance",
-  meeting_effectiveness: "Meeting Effectiveness",
-  company_secretary_experience: "Company Secretariat",
+  attendance_meeting_effectiveness: "Attendance & Meeting Effectiveness",
+  attendance_rate: "Attendance & Meeting Effectiveness",
   information_flow: "Information Flow",
   decision_making: "Decision-Making Process",
-  consensus_building: "Consensus Building",
-  conflict_resolution_process: "Conflict Resolution",
+  consensus_conflict_resolution: "Consensus Building & Conflict Resolution",
+  consensus_building: "Consensus Building & Conflict Resolution",
   board_self_assessment: "Self-Assessment",
-  director_contribution: "Individual Directors Assessment",
-  transparency: "Transparency",
+  stakeholder_transparency: "Transparency & Stakeholder Interests",
+  stakeholder_interests: "Transparency & Stakeholder Interests",
   whistleblowing: "Feedback/Whistleblowing Mechanism",
-  stakeholder_interests: "Stakeholder Interests",
   vision_strategy: "Vision and Strategy",
-  strategic_oversight: "Strategic Oversight",
   goal_setting: "Goal Setting",
   succession_plan: "Succession Planning",
   resource_allocation: "Resource Allocation",
-  compliance_legal: "Compliance and Risk Management",
-  risk_management: "Regulatory Compliance",
-  governance_framework: "Regulatory Compliance\nGovernance Framework",
+  regulatory_knowledge: "Regulatory Knowledge",
+  compliance_risk_oversight: "Compliance & Risk Oversight",
+  governance_framework: "Governance Framework",
   improvement_areas: "Improvement Areas",
   additional_comments: "Additional Comments",
 };
 
 const BOARD_DISPLAY_NUMBER_BY_KEY: Record<string, number> = {
   board_composition_diverse_mix: 1,
-  board_diversity_reflect: 2,
-  board_diversity_importance: 3,
-  board_composition_aligns: 4,
-  board_guidelines_appointment: 5,
-  board_size_appropriate: 6,
-  board_size_effective: 7,
-  board_understands_roles: 8,
-  board_induction_training: 9,
-  chairperson_facilitates: 10,
-  chairperson_participation: 11,
-  board_effective_governance: 12,
-  committees_charters: 13,
-  committees_understanding: 14,
-  committees_effective: 15,
-  committees_report_back: 16,
-  committees_integrate: 17,
-  independent_directors_number: 18,
-  independent_directors_contribute: 19,
-  meetings_frequency: 20,
-  meeting_materials: 21,
-  agenda_clarity: 22,
-  attendance_rate: 23,
-  meeting_effectiveness: 24,
-  company_secretary_experience: 25,
-  company_secretary_senior_staff: 26,
-  company_secretary_assists: 27,
-  information_flow: 28,
-  decision_making: 29,
-  consensus_building: 30,
-  conflict_resolution_process: 31,
-  conflict_handling: 32,
-  board_self_assessment: 33,
-  director_contribution: 34,
-  directors_engaged: 35,
-  transparency: 36,
-  whistleblowing: 37,
-  stakeholder_interests: 38,
-  stakeholder_engagement: 39,
-  management_collaboration: 40,
-  vision_strategy: 41,
-  strategic_oversight: 42,
-  goal_setting: 43,
-  succession_plan: 44,
-  succession_plan_review: 45,
-  resource_allocation: 46,
-  compliance_legal: 47,
-  risk_management: 48,
-  governance_framework: 49,
-  regulatory_knowledge: 50,
+  board_composition_additional_skills: 1,
+  board_guidelines_appointment: 2,
+  board_size_appropriate: 3,
+  board_structure_size_independence: 3,
+  chairperson_facilitates: 4,
+  board_understands_roles: 5,
+  board_induction_training: 6,
+  committees_charters: 7,
+  committees_understanding: 8,
+  committees_roles_integration: 8,
+  meetings_frequency: 9,
+  meetings_frequency_preparation: 9,
+  agenda_clarity: 10,
+  attendance_meeting_effectiveness: 11,
+  attendance_rate: 11,
+  information_flow: 12,
+  decision_making: 13,
+  consensus_conflict_resolution: 14,
+  consensus_building: 14,
+  board_self_assessment: 15,
+  stakeholder_transparency: 16,
+  stakeholder_interests: 16,
+  stakeholder_engagement: 17,
+  whistleblowing: 18,
+  vision_strategy: 19,
+  goal_setting: 20,
+  succession_plan: 21,
+  resource_allocation: 22,
+  regulatory_knowledge: 23,
+  compliance_legal: 24,
+  compliance_risk_oversight: 24,
+  governance_framework: 25,
 };
 
 const PEER_LABEL_OVERRIDE_BY_KEY: Record<string, string> = {
@@ -300,8 +414,6 @@ const PEER_LABEL_OVERRIDE_BY_KEY: Record<string, string> = {
 };
 
 function getBoardSubheadingFallback(question: SurveyQuestion, questionNumber?: number) {
-  if (question.key === "risk_management") return undefined;
-
   if (question.subheading) return question.subheading;
 
   const byKey = BOARD_SUBHEADING_BY_KEY[question.key];
@@ -309,7 +421,7 @@ function getBoardSubheadingFallback(question: SurveyQuestion, questionNumber?: n
 
   // Fallback for backend payloads with different keys but same question copy.
   if (question.displayNumber === 1 || questionNumber === 1 || /diverse mix of skills and experiences/i.test(question.label)) {
-    return "Board Composition";
+    return "Board Composition & Diversity";
   }
 
   return undefined;
@@ -320,7 +432,7 @@ function getBoardDisplayNumberFallback(question: SurveyQuestion) {
 }
 
 function getDisplayQuestionLabel(question: SurveyQuestion) {
-  return PEER_LABEL_OVERRIDE_BY_KEY[question.key] ?? question.label;
+  return BOARD_LABEL_OVERRIDE_BY_KEY[question.key] ?? PEER_LABEL_OVERRIDE_BY_KEY[question.key] ?? question.label;
 }
 
 function renderQuestion(question: SurveyQuestion, questionNumber?: number, boardTemplate = false) {
@@ -511,9 +623,18 @@ function getOverallPercentageMeta(survey: SurveyDefinition) {
 function calculateOverallPercentageFromForm(survey: SurveyDefinition, formData: FormData) {
   let earnedPoints = 0;
   let totalQuestions = 0;
+  const allQuestionKeys = new Set(
+    survey.sections.flatMap((section) => section.questions.map((question) => question.key))
+  );
+  const boardTemplate =
+    survey.slug === "board-evaluation" ||
+    allQuestionKeys.has("board_composition_diverse_mix") ||
+    allQuestionKeys.has("vision_strategy") ||
+    allQuestionKeys.has("compliance_legal");
 
   for (const section of survey.sections) {
     for (const question of section.questions) {
+      if (boardTemplate && LEGACY_HIDDEN_BOARD_QUESTION_KEYS.has(question.key)) continue;
       if (!isFivePointNumericQuestion(question)) continue;
       totalQuestions += 1;
 
@@ -543,7 +664,11 @@ export function SurveyForm({ survey }: { survey: SurveyDefinition }) {
   const peerTemplate =
     survey.slug === "peer-evaluation" ||
     allQuestionKeys.has("evaluation_date") ||
-    allQuestionKeys.has("director_being_evaluated");
+    allQuestionKeys.has("director_being_evaluated") ||
+    allQuestionKeys.has("e2_challenges") ||
+    allQuestionKeys.has("e3_adds_value") ||
+    allQuestionKeys.has("b1_prepared") ||
+    allQuestionKeys.has("c1_risk_controls");
   const overallMeta = getOverallPercentageMeta(survey);
   const sectionsToRender = boardTemplate
     ? normalizeBoardSections(
@@ -553,11 +678,17 @@ export function SurveyForm({ survey }: { survey: SurveyDefinition }) {
         }))
       )
     : peerTemplate
-      ? survey.sections.map((section) => ({
-          ...section,
-          title: normalizePeerSectionTitle(section),
-        }))
+      ? normalizePeerSections(
+          survey.sections.map((section) => ({
+            ...section,
+            title: normalizePeerSectionTitle(section),
+          }))
+        )
       : survey.sections;
+  const normalizedSurvey: SurveyDefinition = {
+    ...survey,
+    sections: sectionsToRender,
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -569,7 +700,7 @@ export function SurveyForm({ survey }: { survey: SurveyDefinition }) {
     const formData = new FormData(event.currentTarget);
     const answers: Record<string, string | string[] | null> = {};
 
-    for (const section of survey.sections) {
+    for (const section of normalizedSurvey.sections) {
       for (const question of section.questions) {
         const key = `q_${question.key}`;
         if (question.type === "multi_select") {
@@ -580,7 +711,7 @@ export function SurveyForm({ survey }: { survey: SurveyDefinition }) {
         }
       }
     }
-    answers[overallMeta.key] = calculateOverallPercentageFromForm(survey, formData).toFixed(1);
+    answers[overallMeta.key] = calculateOverallPercentageFromForm(normalizedSurvey, formData).toFixed(1);
 
     try {
       await apiRequest(`/api/surveys/${survey.slug}/submit`, {

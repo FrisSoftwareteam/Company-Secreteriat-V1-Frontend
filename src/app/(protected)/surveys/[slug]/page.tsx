@@ -10,6 +10,104 @@ import { useAuth } from "@/components/providers/AuthProvider";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
+const DIRECTOR_NAME_REPLACEMENT = "Mr Olawale Osisanya";
+const LEGACY_DIRECTOR_NAMES = new Set([
+  "mr olusegun osibote",
+  "olusegun osibote",
+  "mr olusgen osibote",
+  "olusgen osibote",
+]);
+
+function normalizeDirectorName(value: string) {
+  const normalized = value.trim().toLowerCase().replace(/\./g, "");
+  return LEGACY_DIRECTOR_NAMES.has(normalized) ? DIRECTOR_NAME_REPLACEMENT : value;
+}
+
+function normalizeDirectorOptionsFromSurvey(survey: SurveyDefinition): SurveyDefinition {
+  return {
+    ...survey,
+    sections: survey.sections.map((section) => ({
+      ...section,
+      questions: section.questions.map((question) => {
+        if (question.key !== "director_being_evaluated" || !question.options) {
+          return question;
+        }
+
+        const seen = new Set<string>();
+        const options = question.options
+          .map((option) => normalizeDirectorName(option))
+          .filter((option) => {
+            const key = option.trim().toLowerCase();
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+
+        return { ...question, options };
+      }),
+    })),
+  };
+}
+
+function normalizePeerSectionE(survey: SurveyDefinition): SurveyDefinition {
+  return {
+    ...survey,
+    sections: survey.sections
+      .filter((section) => {
+        const isSectionGHByTitle = /SECTION\s*[GH]\b/i.test(section.title);
+        const hasSectionGHKeys = section.questions.some(
+          (question) => question.key.startsWith("g_") || question.key.startsWith("h_")
+        );
+        return !(isSectionGHByTitle || hasSectionGHKeys);
+      })
+      .map((section) => {
+      const isSectionE = /SECTION\s*E/i.test(section.title);
+      if (!isSectionE) return section;
+
+      const hasPeerSectionEQuestion = section.questions.some((question) =>
+        [
+          "e1_collaboration",
+          "e2_challenges",
+          "e3_adds_value",
+          "e1_collaboration_constructive_challenge",
+          "e2_adds_value",
+        ].includes(question.key) ||
+        question.label.toLowerCase().includes("Works collaboratively with fellow directors and challenges ideas constructively without undermining consensus") ||
+        question.label.toLowerCase().includes("adds value to discussions during committee and plenary sessions")
+      );
+      if (!hasPeerSectionEQuestion) return section;
+
+      const optionalComments = section.questions.find((question) => question.key === "e_optional_comments") ?? {
+        key: "e_optional_comments",
+        label: "Optional Comments: _________________",
+        type: "long_text" as const,
+      };
+
+      return {
+        ...section,
+        questions: [
+          {
+            key: "e1_collaboration_constructive_challenge",
+            label:
+              "Works collaboratively with fellow directors and challenges ideas constructively without undermining consensus",
+            type: "rating_5",
+            required: true,
+            options: ["1", "2", "3", "4", "5"],
+          },
+          {
+            key: "e2_adds_value",
+            label: "Adds value to discussions during committee and plenary sessions",
+            type: "rating_5",
+            required: true,
+            options: ["1", "2", "3", "4", "5"],
+          },
+          optionalComments,
+        ],
+      };
+      }),
+  };
+}
+
 function SurveyInstructions({ slug }: { slug: string }) {
   if (slug === "peer-evaluation") {
     return (
@@ -66,7 +164,9 @@ export default function SurveyPage() {
   const fallbackSurvey = useMemo(() => {
     if (!slug) return null;
     const normalized = slug.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
-    return surveys.find((item) => item.slug.trim().toLowerCase().replace(/[^a-z0-9]/g, "") === normalized) ?? null;
+    const found =
+      surveys.find((item) => item.slug.trim().toLowerCase().replace(/[^a-z0-9]/g, "") === normalized) ?? null;
+    return found ? normalizePeerSectionE(normalizeDirectorOptionsFromSurvey(found)) : null;
   }, [slug]);
   const effectiveSurvey = survey ?? fallbackSurvey;
 
@@ -79,7 +179,7 @@ export default function SurveyPage() {
     apiRequest<{ survey: SurveyDefinition }>(`/api/surveys/${slug}`, { method: "GET" }, token)
       .then((data) => {
         if (cancelled) return;
-        setSurvey(data.survey);
+        setSurvey(normalizePeerSectionE(normalizeDirectorOptionsFromSurvey(data.survey)));
         setState("success");
       })
       .catch(() => {
