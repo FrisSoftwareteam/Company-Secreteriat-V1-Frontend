@@ -4,6 +4,19 @@ type SubmissionData = {
   answers?: Record<string, string | string[] | null>;
 } & Record<string, unknown>;
 
+const DIRECTOR_NAME_REPLACEMENT = "Mr Olawale Osisanya";
+const LEGACY_DIRECTOR_NAMES = new Set([
+  "mr olusegun osibote",
+  "olusegun osibote",
+  "mr olusgen osibote",
+  "olusgen osibote",
+]);
+
+function normalizeDirectorName(value: string) {
+  const normalized = value.trim().toLowerCase().replace(/\./g, "");
+  return LEGACY_DIRECTOR_NAMES.has(normalized) ? DIRECTOR_NAME_REPLACEMENT : value;
+}
+
 export function SubmissionDetail({
   survey,
   data,
@@ -103,8 +116,14 @@ export function SubmissionDetail({
             {section.questions.map((question) => {
               const value = answers[question.key];
               const display = Array.isArray(value)
-                ? value.join(", ")
-                : value ?? "";
+                ? question.key === "director_being_evaluated"
+                  ? value.map((item) => normalizeDirectorName(item)).join(", ")
+                  : value.join(", ")
+                : typeof value === "string"
+                  ? question.key === "director_being_evaluated"
+                    ? normalizeDirectorName(value)
+                    : value
+                  : value ?? "";
                 
               return (
                 <div key={question.key} className="form-field">

@@ -10,7 +10,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
-const DIRECTOR_NAME_REPLACEMENT = "Mr Olawale Osisanya";
+const DIRECTOR_NAME_REPLACEMENT = "Olusegun Osibote";
+const REQUIRED_DIRECTOR_OPTIONS = [DIRECTOR_NAME_REPLACEMENT];
 const LEGACY_DIRECTOR_NAMES = new Set([
   "mr olusegun osibote",
   "olusegun osibote",
@@ -42,6 +43,13 @@ function normalizeDirectorOptionsFromSurvey(survey: SurveyDefinition): SurveyDef
             seen.add(key);
             return true;
           });
+        for (const requiredOption of REQUIRED_DIRECTOR_OPTIONS) {
+          const key = requiredOption.trim().toLowerCase();
+          if (!seen.has(key)) {
+            options.push(requiredOption);
+            seen.add(key);
+          }
+        }
 
         return { ...question, options };
       }),
