@@ -4,12 +4,14 @@ type SubmissionData = {
   answers?: Record<string, string | string[] | null>;
 } & Record<string, unknown>;
 
-const DIRECTOR_NAME_REPLACEMENT = "Mr Olawale Osisanya";
+const DIRECTOR_NAME_REPLACEMENT = "Olusegun Osibote";
 const LEGACY_DIRECTOR_NAMES = new Set([
   "mr olusegun osibote",
   "olusegun osibote",
-  "mr olusgen osibote",
-  "olusgen osibote",
+  "mr olusugen osibote",
+  "olusugen osibote",
+  "mr olusgun osibote",
+  "olusgun osibote",
 ]);
 
 function normalizeDirectorName(value: string) {

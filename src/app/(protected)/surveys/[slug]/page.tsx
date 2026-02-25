@@ -10,13 +10,15 @@ import { useAuth } from "@/components/providers/AuthProvider";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
-const DIRECTOR_NAME_REPLACEMENT = "Olawale Osisanya";
+const DIRECTOR_NAME_REPLACEMENT = "Olusegun Osibote";
 const REQUIRED_DIRECTOR_OPTIONS = [DIRECTOR_NAME_REPLACEMENT];
 const LEGACY_DIRECTOR_NAMES = new Set([
   "mr olusegun osibote",
   "olusegun osibote",
-  "mr olusgen osibote",
-  "olusgen osibote",
+  "mr olusugen osibote",
+  "olusugen osibote",
+  "mr olusgun osibote",
+  "olusgun osibote",
 ]);
 
 function normalizeDirectorName(value: string) {
