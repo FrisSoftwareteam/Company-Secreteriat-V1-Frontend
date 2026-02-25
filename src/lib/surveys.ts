@@ -283,7 +283,7 @@ export const surveys: SurveyDefinition[] = [
               "Mrs. Ronke Akinleye",
               "Mr. Rotimi Olashore",
               "Mr Olawale Osisanya",
-              "Olusegun Osibote",
+              "Olawale Osisanya",
             ],
           },
           {

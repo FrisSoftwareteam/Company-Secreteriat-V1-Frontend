@@ -1,0 +1,27 @@
+(node:45612) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+⨯ Error [PrismaClientKnownRequestError]: 
+Invalid `{imported module ./src/lib/db.ts}["db"].user.findUnique()` invocation in
+c:\Users\Administrator\Documents\My Projects\Company Secreteriat Solution\Frontend\.next\dev\server\chunks\[root-of-the-server]__a9ba9d54._.js:116:150
+
+  113         status: 400
+  114     });
+  115 }
+→ 116 const user = await {imported module ./src/lib/db.ts}["db"].user.findUnique(
+Can't reach database server at `dpg-d61qg0h4tr6s738jkbm0-a.ohio-postgres.render.com:5432`
+
+Please make sure your database server is running at `dpg-d61qg0h4tr6s738jkbm0-a.ohio-postgres.render.com:5432`.
+    at <unknown> (src\app\api\auth\login\route.ts:38:30)
+    at async localLogin (src\app\api\auth\login\route.ts:38:16)
+    at async POST (src\app\api\auth\login\route.ts:93:25)
+  36 |   }
+  37 |
+> 38 |   const user = await db.user.findUnique({ where: { email: identifier } });
+     |                              ^
+  39 |   if (!user) {
+  40 |     return NextResponse.json({ error: "Invalid username/email or password." }, { status: 401 });
+  41 |   } {
+  code: 'P1001',
+  meta: [Object],
+  clientVersion: '6.19.2'
+}

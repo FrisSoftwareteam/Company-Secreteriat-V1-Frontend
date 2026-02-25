@@ -10,7 +10,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 
 type LoadState = "idle" | "loading" | "success" | "error";
 
-const DIRECTOR_NAME_REPLACEMENT = "Olusegun Osibote";
+const DIRECTOR_NAME_REPLACEMENT = "Olawale Osisanya";
 const REQUIRED_DIRECTOR_OPTIONS = [DIRECTOR_NAME_REPLACEMENT];
 const LEGACY_DIRECTOR_NAMES = new Set([
   "mr olusegun osibote",
