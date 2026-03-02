@@ -13,6 +13,10 @@ export function Sidebar({
   const isAdmin = role === "ADMIN";
   const pathname = usePathname();
   const navItemClass = (active: boolean) => `nav-item${active ? " active" : ""}`;
+  const isAdminGraphRoute = pathname.startsWith("/admin/graphical-analysis");
+  const isAdminQuestionnaireGraphRoute = pathname.startsWith("/admin/questionaire-graphical-analysis");
+  const isAdminDashboardRoute =
+    pathname.startsWith("/admin") && !isAdminGraphRoute && !isAdminQuestionnaireGraphRoute;
 
   return (
     <aside className={`sidebar ${className} flex-col justify-between`}>
@@ -28,26 +32,45 @@ export function Sidebar({
 
         <nav className="flex-col gap-2">
           {isAdmin ? (
-            <Link href="/admin" className={navItemClass(pathname.startsWith("/admin"))}>
-              <span className="nav-icon">AD</span> Admin Dashboard
-            </Link>
+            <>
+              <Link href="/admin" className={navItemClass(isAdminDashboardRoute)}>
+                <span className="nav-icon">AD</span>
+                <span className="nav-label">Admin Dashboard</span>
+              </Link>
+              <p className="sidebar-nav-group-title">Analysis</p>
+              <Link href="/admin/graphical-analysis" className={navItemClass(isAdminGraphRoute)}>
+                <span className="nav-icon">GA</span>
+                <span className="nav-label">Peer-to-Peer Graphical Analysis</span>
+              </Link>
+              <Link
+                href="/admin/questionaire-graphical-analysis"
+                className={navItemClass(isAdminQuestionnaireGraphRoute)}
+              >
+                <span className="nav-icon">QA</span>
+                <span className="nav-label">Questionaire Graphical Analysis</span>
+              </Link>
+            </>
           ) : (
             <>
               <Link href="/dashboard" className={navItemClass(pathname === "/dashboard")}>
-                <span className="nav-icon">DB</span> Dashboard
+                <span className="nav-icon">DB</span>
+                <span className="nav-label">Dashboard</span>
               </Link>
               <Link
                 href="/dashboard#available-surveys"
                 className={navItemClass(pathname.startsWith("/surveys"))}
               >
-                <span className="nav-icon">AS</span> Assessments
+                <span className="nav-icon">AS</span>
+                <span className="nav-label">Assessments</span>
               </Link>
               <Link href="/dashboard#recent-activity" className={navItemClass(false)}>
-                <span className="nav-icon">MR</span> My Reports
+                <span className="nav-icon">MR</span>
+                <span className="nav-label">My Reports</span>
               </Link>
               <div className="my-4 sidebar-divider" />
               <Link href="/admin" className={navItemClass(pathname.startsWith("/admin"))}>
-                <span className="nav-icon">AP</span> Admin Panel
+                <span className="nav-icon">AP</span>
+                <span className="nav-label">Admin Panel</span>
               </Link>
             </>
           )}

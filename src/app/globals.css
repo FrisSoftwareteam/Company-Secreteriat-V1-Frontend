@@ -486,13 +486,13 @@ textarea {
 /* Sidebar Links */
 .nav-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
-  height: 48px;
-  padding: 0 24px;
+  min-height: 48px;
+  padding: 10px 16px;
   color: #bdc7da;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 0.2s;
   position: relative;
   text-decoration: none;
@@ -524,10 +524,10 @@ textarea {
 }
 
 .nav-icon {
-  min-width: 24px;
+  min-width: 26px;
   height: 24px;
   color: inherit;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   display: inline-flex;
   align-items: center;
@@ -535,6 +535,22 @@ textarea {
   border: 1px solid #2c3950;
   border-radius: 6px;
   background: #141b28;
+  margin-top: 1px;
+}
+
+.nav-label {
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+
+.sidebar-nav-group-title {
+  margin: 8px 8px 10px;
+  padding: 0 8px;
+  color: #7e8faa;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 /* Utilities */
@@ -1212,6 +1228,37 @@ textarea {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-main);
+}
+
+.route-loading-card {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.route-loader {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 4px solid #d9e2ef;
+  border-top-color: var(--primary);
+  animation: routeSpin 0.8s linear infinite;
+}
+
+.route-loading-text {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+@keyframes routeSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {

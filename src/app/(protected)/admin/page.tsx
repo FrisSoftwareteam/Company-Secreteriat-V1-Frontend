@@ -369,73 +369,111 @@ function AdminContent() {
         <div className="flex-between mb-4">
           <h1>Admin Dashboard</h1>
         </div>
+        <div className="flex gap-4 flex-wrap" style={{ marginBottom: "1rem" }}>
+          <div
+            style={{
+              background: "var(--accent)",
+              border: "1px solid var(--border)",
+              borderRadius: 14,
+              padding: "12px 14px",
+              minWidth: 180,
+            }}
+          >
+            <p className="text-secondary text-xs" style={{ margin: 0 }}>Total Surveys</p>
+            <p className="font-bold" style={{ margin: "6px 0 0", fontSize: 22 }}>{surveys.length}</p>
+          </div>
+          <div
+            style={{
+              background: "var(--accent)",
+              border: "1px solid var(--border)",
+              borderRadius: 14,
+              padding: "12px 14px",
+              minWidth: 180,
+            }}
+          >
+            <p className="text-secondary text-xs" style={{ margin: 0 }}>Recent Submissions</p>
+            <p className="font-bold" style={{ margin: "6px 0 0", fontSize: 22 }}>{submissions.length}</p>
+          </div>
+        </div>
 
         <h3 className="text-secondary text-sm mb-4 font-medium">Export Data</h3>
-        <div className="flex gap-3 flex-wrap">
-          {surveys.map((survey) => (
-            <button
-              key={survey.slug}
-              className="button hover-scale"
-              type="button"
-              onClick={() => token && downloadExport(survey.slug, token)}
-            >
-              <span>Download {survey.title} CSV</span>
-            </button>
-          ))}
-        </div>
+        {surveys.length === 0 ? (
+          <p className="notice" style={{ margin: 0 }}>
+            No surveys are available for export yet.
+          </p>
+        ) : (
+          <div className="flex gap-3 flex-wrap">
+            {surveys.map((survey) => (
+              <button
+                key={survey.slug}
+                className="button hover-scale"
+                type="button"
+                onClick={() => token && downloadExport(survey.slug, token)}
+              >
+                <span>Download {survey.title} CSV</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="card">
         <h2 className="text-xl mb-4">Survey Results</h2>
-        <div className="overflow-hidden">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Survey</th>
-                <th>Submissions</th>
-                <th style={{ textAlign: "right" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(() => {
-                const derivedCounts = buildDerivedCounts(submissions);
-                const countsEntries = Object.entries(countsBySurveySlug);
-                return surveys.map((survey) => {
-                  const directCount = countsBySurveySlug[survey.slug];
-                  const normalizedSurveySlug = normalizeSlug(survey.slug);
-                  const normalizedCountFromMap =
-                    countsEntries.find(([key]) => normalizeSlug(key) === normalizedSurveySlug)?.[1] ?? 0;
-                  const derivedCount = derivedCounts[normalizedSurveySlug] ?? 0;
-                  const resolvedCount = Math.max(directCount ?? 0, normalizedCountFromMap, derivedCount);
+        {surveys.length === 0 ? (
+          <p className="notice" style={{ margin: 0 }}>
+            No survey templates found.
+          </p>
+        ) : (
+          <div className="overflow-hidden">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Survey</th>
+                  <th>Submissions</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(() => {
+                  const derivedCounts = buildDerivedCounts(submissions);
+                  const countsEntries = Object.entries(countsBySurveySlug);
+                  return surveys.map((survey) => {
+                    const directCount = countsBySurveySlug[survey.slug];
+                    const normalizedSurveySlug = normalizeSlug(survey.slug);
+                    const normalizedCountFromMap =
+                      countsEntries.find(([key]) => normalizeSlug(key) === normalizedSurveySlug)?.[1] ?? 0;
+                    const derivedCount = derivedCounts[normalizedSurveySlug] ?? 0;
+                    const resolvedCount = Math.max(directCount ?? 0, normalizedCountFromMap, derivedCount);
 
-                  return (
-                    <tr key={survey.slug}>
-                      <td>
-                        <div className="font-bold">{survey.title}</div>
-                        <div className="text-secondary text-xs">{survey.description}</div>
-                      </td>
-                      <td>{resolvedCount}</td>
-                      <td style={{ textAlign: "right" }}>
-                        <div className="flex items-center justify-between" style={{ justifyContent: "flex-end", gap: 12 }}>
-                          <Link href={`/admin/results/${survey.slug}`} className="text-primary font-bold hover:underline">
-                            View Results
-                          </Link>
-                          <button
-                            type="button"
-                            className="text-secondary hover:underline"
-                            onClick={() => token && downloadExport(survey.slug, token)}
-                          >
-                            CSV
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                });
-              })()}
-            </tbody>
-          </table>
-        </div>
+                    return (
+                      <tr key={survey.slug}>
+                        <td>
+                          <div className="font-bold">{survey.title}</div>
+                          <div className="text-secondary text-xs">{survey.description}</div>
+                        </td>
+                        <td>{resolvedCount}</td>
+                        <td style={{ textAlign: "right" }}>
+                          <div className="flex items-center justify-between" style={{ justifyContent: "flex-end", gap: 12 }}>
+                            <Link href={`/admin/results/${survey.slug}`} className="text-primary font-bold hover:underline">
+                              View Results
+                            </Link>
+                            <button
+                              type="button"
+                              className="text-secondary hover:underline"
+                              onClick={() => token && downloadExport(survey.slug, token)}
+                            >
+                              CSV
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="card">
@@ -451,7 +489,22 @@ function AdminContent() {
           </p>
         ) : null}
         {submissions.length === 0 ? (
-          <p className="p-4 text-secondary text-center">{q ? `No submissions match "${q}".` : "No submissions yet."}</p>
+          <div
+            style={{
+              border: "1px dashed var(--border)",
+              borderRadius: 14,
+              padding: 20,
+              background: "var(--accent)",
+              textAlign: "center",
+            }}
+          >
+            <p className="font-bold" style={{ margin: "0 0 6px" }}>
+              {q ? `No submissions match "${q}".` : "No submissions yet."}
+            </p>
+            <p className="text-secondary text-sm" style={{ margin: 0 }}>
+              Submissions will appear here after users complete an assessment.
+            </p>
+          </div>
         ) : (
           <div className="overflow-hidden">
             <table className="table">
