@@ -1,5 +1,9 @@
-export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000").replace(/\/$/, "");
+export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 const API_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS || 10000);
+
+function buildApiUrl(path: string) {
+  return `${API_BASE_URL}${path}`;
+}
 
 export async function apiRequest<T>(
   path: string,
@@ -22,7 +26,7 @@ export async function apiRequest<T>(
 
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, {
+    response = await fetch(buildApiUrl(path), {
       ...options,
       headers,
       signal: controller.signal,
@@ -33,7 +37,7 @@ export async function apiRequest<T>(
     }
     if (error instanceof TypeError) {
       throw new Error(
-        `Network error while contacting ${API_BASE_URL}${path}. Verify backend is running and CORS/HTTPS settings allow this origin.`
+        `Network error while contacting ${buildApiUrl(path)}. Verify backend is running and CORS/HTTPS settings allow this origin.`
       );
     }
     throw error;
