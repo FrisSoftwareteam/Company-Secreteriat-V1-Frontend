@@ -1,8 +1,16 @@
-export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+const CONFIGURED_API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
+// Always keep frontend API calls same-origin; Next rewrites handle backend proxying.
+export const API_BASE_URL = "";
 const API_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS || 10000);
 
 function buildApiUrl(path: string) {
-  return `${API_BASE_URL}${path}`;
+  if (/^https?:\/\//i.test(path)) {
+    return path;
+  }
+  if (path.startsWith("/api")) {
+    return path;
+  }
+  return `${CONFIGURED_API_BASE_URL}${path}`;
 }
 
 export async function apiRequest<T>(
