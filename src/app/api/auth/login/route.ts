@@ -90,9 +90,22 @@ export async function POST(request: NextRequest) {
   const body = await request.text();
 
   // Prefer local DB-backed login so issued tokens are always valid for local admin APIs.
-  const localResponse = await localLogin(request, body);
-  if (localResponse.status === 200 || !targetUrl) {
-    return localResponse;
+  let localResponse: NextResponse | null = null;
+  let localLoginError: Error | null = null;
+
+  try {
+    localResponse = await localLogin(request, body);
+    if (localResponse.status === 200 || !targetUrl) {
+      return localResponse;
+    }
+  } catch (error) {
+    localLoginError = error instanceof Error ? error : new Error("Local login failed.");
+    if (!targetUrl) {
+      return NextResponse.json(
+        { error: `Login service unavailable: ${localLoginError.message}` },
+        { status: 503 }
+      );
+    }
   }
 
   const controller = new AbortController();
@@ -120,8 +133,14 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     // If local login already failed and upstream is unavailable, return local failure first.
-    if (localResponse.status >= 400 && localResponse.status < 500) {
+    if (localResponse && localResponse.status >= 400 && localResponse.status < 500) {
       return localResponse;
+    }
+    if (localLoginError) {
+      return NextResponse.json(
+        { error: `Login service unavailable: ${localLoginError.message}` },
+        { status: 503 }
+      );
     }
     if (error instanceof DOMException && error.name === "AbortError") {
       return NextResponse.json(
