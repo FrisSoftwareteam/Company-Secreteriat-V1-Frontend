@@ -1,7 +1,7 @@
 const CONFIGURED_API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 // Always keep frontend API calls same-origin; Next rewrites handle backend proxying.
 export const API_BASE_URL = "";
-const API_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS || 10000);
+const API_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS || 30000);
 
 function buildApiUrl(path: string) {
   if (/^https?:\/\//i.test(path)) {
