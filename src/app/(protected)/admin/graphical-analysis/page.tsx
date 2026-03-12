@@ -29,7 +29,7 @@ type QuestionRanking = {
 
 const PEER_SURVEY_SLUG = "peer-evaluation";
 const DIRECTOR_FIELD_KEY = "director_being_evaluated";
-const TOP_DIRECTORS_LIMIT = 10;
+const TOP_DIRECTORS_LIMIT = 11;
 
 const SCORE_BY_LIKERT_LABEL: Record<string, number> = {
   "strongly agree": 5,
@@ -92,7 +92,7 @@ export default function GraphicalAnalysisPage() {
   const [directorFilter, setDirectorFilter] = useState("");
   const [questionFilter, setQuestionFilter] = useState("");
   const [showOnlyActiveDirectors, setShowOnlyActiveDirectors] = useState(true);
-  const [displayLimit, setDisplayLimit] = useState<"10" | "all">("10");
+  const [displayLimit, setDisplayLimit] = useState<"11" | "all">("11");
 
   useEffect(() => {
     if (!token) return;
@@ -251,7 +251,7 @@ export default function GraphicalAnalysisPage() {
 
   const filteredDirectors = useMemo(() => {
     if (displayLimit === "all") return filteredDirectorsBase;
-    return filteredDirectorsBase.slice(0, 10);
+    return filteredDirectorsBase.slice(0, 11);
   }, [filteredDirectorsBase, displayLimit]);
 
   const filteredQuestionRankings = useMemo(() => {
@@ -259,7 +259,7 @@ export default function GraphicalAnalysisPage() {
     const query = questionFilter.trim().toLowerCase();
     const questionRows = analysis.questionRankings.map((question) => ({
       ...question,
-      rows: displayLimit === "all" ? question.rows : question.rows.slice(0, 10),
+      rows: displayLimit === "all" ? question.rows : question.rows.slice(0, 11),
     }));
     if (!query) return questionRows;
     return questionRows.filter((question) => question.label.toLowerCase().includes(query));
@@ -323,7 +323,7 @@ export default function GraphicalAnalysisPage() {
       </div>
 
       <div className="card">
-        <h2 style={{ marginBottom: 12 }}>Top 10 Directors (Overall)</h2>
+        <h2 style={{ marginBottom: 12 }}>Top 11 Directors (Overall)</h2>
         <div className="peer-controls peer-controls-row">
           <input
             type="text"
@@ -339,8 +339,8 @@ export default function GraphicalAnalysisPage() {
             />
             Show only directors with responses
           </label>
-          <select value={displayLimit} onChange={(event) => setDisplayLimit(event.target.value as "10" | "all")}>
-            <option value="10">Show Top 10</option>
+          <select value={displayLimit} onChange={(event) => setDisplayLimit(event.target.value as "11" | "all")}>
+            <option value="11">Show Top 11</option>
             <option value="all">Show All</option>
           </select>
         </div>
@@ -367,7 +367,7 @@ export default function GraphicalAnalysisPage() {
       </div>
 
       <div className="card">
-        <h2 style={{ marginBottom: 12 }}>Question-by-Question Top 10 Directors</h2>
+        <h2 style={{ marginBottom: 12 }}>Question-by-Question Top 11 Directors</h2>
         <div className="peer-controls peer-controls-row">
           <input
             type="text"
