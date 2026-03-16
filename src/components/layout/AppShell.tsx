@@ -47,6 +47,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const authRoute = isAuthRoute(pathname);
 
+  if (authRoute) {
+    return (
+      <div className="auth-shell">
+        <div className="auth-shell-left">
+          <div className="auth-shell-brand">
+            <div className="auth-shell-logo-wrap">
+              <Image
+                src="/firstregistrars.png"
+                alt="FirstRegistrars & Investor Services"
+                width={220}
+                height={62}
+                priority
+                className="auth-brand-logo"
+              />
+            </div>
+            <p className="auth-shell-tagline">
+              Governance. Integrity. Excellence.
+            </p>
+          </div>
+          <div className="auth-shell-decoration" aria-hidden="true">
+            <div className="auth-deco-circle auth-deco-circle-1" />
+            <div className="auth-deco-circle auth-deco-circle-2" />
+            <div className="auth-deco-circle auth-deco-circle-3" />
+          </div>
+        </div>
+        <div className="auth-shell-right">
+          <main>{children}</main>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="global-brand-bar">
@@ -59,7 +91,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className="global-brand-logo"
         />
       </div>
-      {user && !authRoute ? (
+      {user ? (
         <div className="app-layout">
           <Sidebar role={user.role} />
           <div className="main-content">
