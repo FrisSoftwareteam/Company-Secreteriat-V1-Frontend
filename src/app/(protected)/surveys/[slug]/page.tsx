@@ -119,6 +119,28 @@ function normalizePeerSectionE(survey: SurveyDefinition): SurveyDefinition {
 }
 
 function SurveyInstructions({ slug }: { slug: string }) {
+  if (slug === "feedback-form") {
+    return (
+      <div style={{ marginTop: 16 }}>
+        <p style={{ margin: "0 0 8px", fontWeight: 700 }}>Instructions for Completion</p>
+        <p style={{ margin: "0 0 6px" }}>
+          Please rate each aspect of the board evaluation service on a scale of 1 to 5.
+        </p>
+        <p style={{ margin: "0 0 6px" }}>
+          Your comments will help improve the quality of our process, engagement, and reporting.
+        </p>
+        <p style={{ margin: "0 0 12px" }}>Click submit when the feedback form is fully completed.</p>
+
+        <p style={{ margin: "0 0 8px", fontWeight: 700 }}>Evaluation Scale</p>
+        <p style={{ margin: "0 0 4px" }}>5: Excellent</p>
+        <p style={{ margin: "0 0 4px" }}>4: Very Good</p>
+        <p style={{ margin: "0 0 4px" }}>3: Good</p>
+        <p style={{ margin: "0 0 4px" }}>2: Fair</p>
+        <p style={{ margin: 0 }}>1: Poor</p>
+      </div>
+    );
+  }
+
   if (slug === "peer-evaluation") {
     return (
       <div style={{ marginTop: 16 }}>

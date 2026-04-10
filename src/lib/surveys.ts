@@ -252,6 +252,137 @@ export const surveys: SurveyDefinition[] = [
     ],
   },
   {
+    slug: "feedback-form",
+    title: "Feedback Form",
+    description:
+      "Share feedback on the board evaluation service, process, engagement quality, and reporting insights.",
+    sections: [
+      {
+        title: "Section 1: Respondent Details",
+        questions: [
+          {
+            key: "client_name",
+            label: "Client Name",
+            type: "short_text",
+            required: true,
+          },
+          {
+            key: "evaluation_date",
+            label: "Date of Evaluation",
+            type: "date",
+            required: true,
+          },
+        ],
+      },
+      {
+        title: "Section 2: Process & Administration",
+        questions: [
+          {
+            key: "clarity_of_objectives",
+            label: "Clarity of Objectives: How well did we communicate the goals and scope of the evaluation?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+          {
+            key: "timelines_coordination",
+            label: "Timelines & Coordination: Was the process managed efficiently and within the agreed-upon schedule?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+          {
+            key: "platform_tools",
+            label: "Platform/Tools: Was the survey platform or interview scheduling easy to navigate?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+        ],
+      },
+      {
+        title: "Section 3: Quality of Engagement",
+        questions: [
+          {
+            key: "professionalism",
+            label: "Professionalism: Did our team demonstrate appropriate expertise and independence?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+          {
+            key: "interview_quality",
+            label: "Interview Quality (if applicable): Were the interview questions relevant and conducted with sensitivity?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+          {
+            key: "neutrality",
+            label: "Neutrality: Did you feel the evaluation was conducted with an objective, unbiased perspective?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+        ],
+      },
+      {
+        title: "Section 4: Reporting & Insight",
+        questions: [
+          {
+            key: "depth_of_analysis",
+            label: "Depth of Analysis: Did the final report go beyond surface-level observations to identify root causes?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+          {
+            key: "presentation_of_findings",
+            label: "Presentation of Findings: Was the feedback delivered to the board in a clear, constructive manner?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+          {
+            key: "actionability",
+            label: "Actionability: How practical and relevant are the recommendations for improving board performance?",
+            type: "rating_5",
+            required: true,
+            options: ratingOptions,
+          },
+        ],
+      },
+      {
+        title: "Section 5: Open Feedback",
+        description: "Your qualitative insights help us improve our service.",
+        questions: [
+          {
+            key: "process_highlights",
+            label: "What stood out to you in the entire board evaluation process?",
+            type: "long_text",
+          },
+          {
+            key: "process_improvements",
+            label: "Is there any part of the process that could be improved?",
+            type: "long_text",
+          },
+          {
+            key: "would_recommend",
+            label: "Would you recommend our services to other organisations?",
+            type: "single_select",
+            required: true,
+            options: ["Yes", "No", "Maybe"],
+          },
+          {
+            key: "recommendation_reason",
+            label: "If no, please give reason(s)/how can we better serve you?",
+            type: "long_text",
+          },
+        ],
+      },
+    ],
+  },
+  {
     slug: "peer-evaluation",
     title: "Directors’ Peer-to-Peer Evaluation Questionnaire",
     description:

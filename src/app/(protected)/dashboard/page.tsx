@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { apiRequest } from "@/lib/api";
-import { SurveyDefinition } from "@/lib/surveys";
+import { surveys as localSurveys, SurveyDefinition } from "@/lib/surveys";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 type Submission = {
@@ -37,6 +37,40 @@ function DashboardContent() {
   }, [token, q]);
 
   const term = q.trim();
+  const displayedSurveys = useMemo(() => {
+    const orderedSurveys = [...surveys];
+    const feedbackSurvey = localSurveys.find((survey) => survey.slug === "feedback-form");
+    const loweredTerm = term.toLowerCase();
+    const matchesSearch =
+      !loweredTerm ||
+      Boolean(
+        feedbackSurvey &&
+          (feedbackSurvey.title.toLowerCase().includes(loweredTerm) ||
+            feedbackSurvey.description.toLowerCase().includes(loweredTerm))
+      );
+
+    if (feedbackSurvey && matchesSearch) {
+      const existingFeedbackIndex = orderedSurveys.findIndex((survey) => survey.slug === feedbackSurvey.slug);
+      if (existingFeedbackIndex === -1) {
+        const peerIndex = orderedSurveys.findIndex((survey) => survey.slug === "peer-evaluation");
+        if (peerIndex === -1) {
+          orderedSurveys.push(feedbackSurvey);
+        } else {
+          orderedSurveys.splice(peerIndex, 0, feedbackSurvey);
+        }
+      }
+    }
+
+    const feedbackIndex = orderedSurveys.findIndex((survey) => survey.slug === "feedback-form");
+    const peerIndex = orderedSurveys.findIndex((survey) => survey.slug === "peer-evaluation");
+
+    if (feedbackIndex !== -1 && peerIndex !== -1 && feedbackIndex > peerIndex) {
+      const [feedbackSurvey] = orderedSurveys.splice(feedbackIndex, 1);
+      orderedSurveys.splice(peerIndex, 0, feedbackSurvey);
+    }
+
+    return orderedSurveys;
+  }, [surveys, term]);
 
   return (
     <div className="dashboard-grid">
@@ -47,11 +81,11 @@ function DashboardContent() {
 
       <div id="available-surveys">
         <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>Available Surveys</h2>
-        {term && surveys.length === 0 ? (
+        {term && displayedSurveys.length === 0 ? (
           <p className="text-secondary">No surveys match "{q}".</p>
         ) : (
           <div className="survey-grid">
-            {surveys.map((survey) => (
+            {displayedSurveys.map((survey) => (
               <div key={survey.slug} className="survey-card">
                 <h3>{survey.title}</h3>
                 <p>{survey.description}</p>
