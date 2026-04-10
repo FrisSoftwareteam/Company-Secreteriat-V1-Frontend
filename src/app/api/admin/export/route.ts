@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiSessionUser } from "@/lib/api-session";
 import { db } from "@/lib/db";
 import { surveys } from "@/lib/surveys";
+import { proxyToUpstream, shouldProxyToUpstream } from "@/lib/upstream-api";
 
 function normalizeSlug(value: string) {
   return value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -35,6 +36,10 @@ function getAnswerMap(data: unknown) {
 }
 
 export async function GET(request: NextRequest) {
+  if (shouldProxyToUpstream()) {
+    return proxyToUpstream(request);
+  }
+
   const user = await getApiSessionUser(request);
   if (!user || user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

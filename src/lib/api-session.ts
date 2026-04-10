@@ -67,24 +67,28 @@ export async function getApiSessionUser(request: NextRequest): Promise<ApiSessio
   );
   if (tokens.length === 0) return null;
 
-  for (const token of tokens) {
-    const session = await db.session.findUnique({
-      where: { token },
-      include: { user: true },
-    });
-    if (!session) continue;
+  try {
+    for (const token of tokens) {
+      const session = await db.session.findUnique({
+        where: { token },
+        include: { user: true },
+      });
+      if (!session) continue;
 
-    if (session.expiresAt < new Date()) {
-      await db.session.delete({ where: { token } }).catch(() => {});
-      continue;
+      if (session.expiresAt < new Date()) {
+        await db.session.delete({ where: { token } }).catch(() => {});
+        continue;
+      }
+
+      return {
+        id: session.user.id,
+        email: session.user.email,
+        role: session.user.role,
+        token,
+      };
     }
-
-    return {
-      id: session.user.id,
-      email: session.user.email,
-      role: session.user.role,
-      token,
-    };
+  } catch {
+    // Local Prisma session storage is optional in environments that rely on upstream auth.
   }
 
   for (const token of tokens) {

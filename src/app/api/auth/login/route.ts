@@ -4,6 +4,10 @@ import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 
+function hasLocalDatabase() {
+  return Boolean(process.env.DATABASE_URL?.trim());
+}
+
 function getTargetUrl() {
   const base = process.env.API_PROXY_TARGET?.trim()?.replace(/\/$/, "");
   if (!base) {
@@ -88,21 +92,33 @@ async function localLogin(request: NextRequest, bodyText: string) {
 export async function POST(request: NextRequest) {
   const targetUrl = getTargetUrl();
   const body = await request.text();
+  const shouldUseLocalLogin = hasLocalDatabase();
 
   // Prefer local DB-backed login so issued tokens are always valid for local admin APIs.
   let localResponse: NextResponse | null = null;
   let localLoginError: Error | null = null;
 
-  try {
-    localResponse = await localLogin(request, body);
-    if (localResponse.status === 200 || !targetUrl) {
-      return localResponse;
+  if (shouldUseLocalLogin) {
+    try {
+      localResponse = await localLogin(request, body);
+      if (localResponse.status === 200 || !targetUrl) {
+        return localResponse;
+      }
+    } catch (error) {
+      localLoginError = error instanceof Error ? error : new Error("Local login failed.");
+      if (!targetUrl) {
+        return NextResponse.json(
+          { error: `Login service unavailable: ${localLoginError.message}` },
+          { status: 503 }
+        );
+      }
     }
-  } catch (error) {
-    localLoginError = error instanceof Error ? error : new Error("Local login failed.");
+  }
+
+  if (!targetUrl) {
     if (!targetUrl) {
       return NextResponse.json(
-        { error: `Login service unavailable: ${localLoginError.message}` },
+        { error: "Login service is not configured. Set API_PROXY_TARGET or DATABASE_URL." },
         { status: 503 }
       );
     }

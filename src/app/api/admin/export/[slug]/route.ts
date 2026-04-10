@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getApiSessionUser } from "@/lib/api-session";
 import { db } from "@/lib/db";
 import { surveys } from "@/lib/surveys";
+import { proxyToUpstream, shouldProxyToUpstream } from "@/lib/upstream-api";
 
 function normalizeSlug(value: string) {
   return value.trim().toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -38,6 +39,11 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  if (shouldProxyToUpstream()) {
+    const { slug } = await params;
+    return proxyToUpstream(request, `/api/admin/export/${slug}${request.nextUrl.search}`);
+  }
+
   const user = await getApiSessionUser(request);
   if (!user || user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
